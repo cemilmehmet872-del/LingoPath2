@@ -8,54 +8,141 @@ from pathlib import Path
 
 import streamlit as st
 
+try:
+    from streamlit_sortables import sort_items  # sürükle-bırak için: pip install streamlit-sortables
+except ImportError:
+    sort_items = None
+
 st.set_page_config(page_title="LingoPath", page_icon="✏️", layout="centered")
 
 SAVE = Path("lingopath_progress.json")
 DAILY_GOAL = 30  # günlük XP hedefi
 INTERVALS = {1: 1, 2: 2, 3: 4, 4: 7, 5: 15}  # kutu -> kaç gün sonra tekrar
+LEVELS = ["Tümü", "Başlangıç", "Orta", "İleri"]
 
+B, O, I = "Başlangıç", "Orta", "İleri"
 WORDS = [
-    ("apple", "elma", "I eat an apple.", "Başlangıç"),
-    ("borrow", "ödünç almak", "Can I borrow your pen?", "Başlangıç"),
-    ("quiet", "sessiz", "The library is quiet.", "Başlangıç"),
-    ("careful", "dikkatli", "Be careful when you cross the road.", "Başlangıç"),
-    ("journey", "yolculuk", "Learning English is a journey.", "Başlangıç"),
-    ("beautiful", "güzel", "The garden is beautiful.", "Başlangıç"),
-    ("improve", "geliştirmek", "I want to improve my English.", "Orta"),
-    ("although", "her ne kadar", "Although it was late, we continued.", "Orta"),
-    ("environment", "çevre", "We should protect the environment.", "Orta"),
-    ("discover", "keşfetmek", "I want to discover new places.", "Orta"),
-    ("challenge", "zorluk", "Learning a language is a challenge.", "Orta"),
-    ("confident", "kendine güvenen", "I feel confident when I practise.", "Orta"),
-    ("achieve", "başarmak", "You can achieve your goals.", "Orta"),
-    ("curious", "meraklı", "Curious students ask questions.", "Orta"),
-    ("opportunity", "fırsat", "This is a great opportunity.", "İleri"),
-    ("delicious", "lezzetli", "This soup is delicious.", "Başlangıç"),
-    ("friendly", "arkadaş canlısı", "Our new teacher is friendly.", "Başlangıç"),
-    ("usually", "genellikle", "I usually walk to school.", "Başlangıç"),
-    ("remember", "hatırlamak", "Please remember my name.", "Başlangıç"),
-    ("important", "önemli", "Sleep is important for learning.", "Orta"),
-    ("solution", "çözüm", "We found a solution to the problem.", "Orta"),
-    ("protect", "korumak", "We must protect nature.", "Orta"),
-    ("successful", "başarılı", "Practice helps you become successful.", "Orta"),
-    ("knowledge", "bilgi", "Knowledge grows when we learn.", "İleri"),
-    ("independent", "bağımsız", "She is an independent learner.", "İleri"),
+    # ---- Başlangıç ----
+    ("apple", "elma", "I eat an apple.", B),
+    ("borrow", "ödünç almak", "Can I borrow your pen?", B),
+    ("quiet", "sessiz", "The library is quiet.", B),
+    ("careful", "dikkatli", "Be careful when you cross the road.", B),
+    ("journey", "yolculuk", "Learning English is a journey.", B),
+    ("beautiful", "güzel", "The garden is beautiful.", B),
+    ("delicious", "lezzetli", "This soup is delicious.", B),
+    ("friendly", "arkadaş canlısı", "Our new teacher is friendly.", B),
+    ("usually", "genellikle", "I usually walk to school.", B),
+    ("remember", "hatırlamak", "Please remember my name.", B),
+    ("water", "su", "I drink water every day.", B),
+    ("book", "kitap", "This book is interesting.", B),
+    ("house", "ev", "Our house has a small garden.", B),
+    ("family", "aile", "I love my family.", B),
+    ("morning", "sabah", "I wake up early in the morning.", B),
+    ("night", "gece", "The stars shine at night.", B),
+    ("happy", "mutlu", "She is happy today.", B),
+    ("sad", "üzgün", "He looks sad.", B),
+    ("big", "büyük", "They live in a big city.", B),
+    ("small", "küçük", "I have a small bag.", B),
+    ("fast", "hızlı", "The train is very fast.", B),
+    ("slow", "yavaş", "The turtle is slow.", B),
+    ("hot", "sıcak", "The tea is hot.", B),
+    ("cold", "soğuk", "It is cold in winter.", B),
+    ("open", "açmak", "Please open the window.", B),
+    ("close", "kapatmak", "Close the door, please.", B),
+    ("buy", "satın almak", "I want to buy a new phone.", B),
+    ("sell", "satmak", "They sell fresh bread.", B),
+    ("ask", "sormak", "You can ask me anything.", B),
+    ("answer", "cevap", "I know the answer.", B),
+    ("understand", "anlamak", "I understand the lesson.", B),
+    ("walk", "yürümek", "We walk in the park.", B),
+    ("run", "koşmak", "He runs every morning.", B),
+    ("sleep", "uyumak", "Babies sleep a lot.", B),
+    ("cook", "pişirmek", "My mother cooks dinner.", B),
+    ("read", "okumak", "I read before bed.", B),
+    ("write", "yazmak", "Write your name here.", B),
+    ("listen", "dinlemek", "Listen to the teacher.", B),
+    ("speak", "konuşmak", "Can you speak slowly?", B),
+    ("weather", "hava durumu", "The weather is nice today.", B),
+    ("city", "şehir", "Istanbul is a huge city.", B),
+    ("street", "sokak", "The street is full of people.", B),
+    ("kitchen", "mutfak", "She is in the kitchen.", B),
+    ("birthday", "doğum günü", "Today is my birthday.", B),
+    # ---- Orta ----
+    ("improve", "geliştirmek", "I want to improve my English.", O),
+    ("although", "her ne kadar", "Although it was late, we continued.", O),
+    ("environment", "çevre", "We should protect the environment.", O),
+    ("discover", "keşfetmek", "I want to discover new places.", O),
+    ("challenge", "zorluk", "Learning a language is a challenge.", O),
+    ("confident", "kendine güvenen", "I feel confident when I practise.", O),
+    ("achieve", "başarmak", "You can achieve your goals.", O),
+    ("curious", "meraklı", "Curious students ask questions.", O),
+    ("important", "önemli", "Sleep is important for learning.", O),
+    ("solution", "çözüm", "We found a solution to the problem.", O),
+    ("protect", "korumak", "We must protect nature.", O),
+    ("successful", "başarılı", "Practice helps you become successful.", O),
+    ("experience", "deneyim", "She has a lot of experience.", O),
+    ("decision", "karar", "It was a difficult decision.", O),
+    ("popular", "popüler", "This song is very popular.", O),
+    ("probably", "muhtemelen", "It will probably rain tomorrow.", O),
+    ("recently", "yakın zamanda", "I recently started a new course.", O),
+    ("strange", "garip", "I heard a strange noise.", O),
+    ("prepare", "hazırlamak", "We prepare for the exam together.", O),
+    ("explain", "açıklamak", "Can you explain this rule?", O),
+    ("suggest", "önermek", "I suggest taking a short break.", O),
+    ("depend", "bağlı olmak", "It depends on the weather.", O),
+    ("manage", "idare etmek", "How do you manage your time?", O),
+    ("avoid", "kaçınmak", "Try to avoid mistakes.", O),
+    ("mistake", "hata", "Everyone makes mistakes.", O),
+    ("compare", "karşılaştırmak", "Compare the two answers.", O),
+    ("describe", "tanımlamak", "Describe your best friend.", O),
+    ("develop", "gelişmek", "Children develop quickly.", O),
+    ("patient", "sabırlı", "A good teacher is patient.", O),
+    ("honest", "dürüst", "Please be honest with me.", O),
+    ("generous", "cömert", "He is a generous man.", O),
+    ("polite", "kibar", "She is always polite.", O),
+    ("creative", "yaratıcı", "Children are very creative.", O),
+    ("useful", "faydalı", "This app is useful.", O),
+    ("common", "yaygın", "This is a common mistake.", O),
+    ("allow", "izin vermek", "They do not allow phones here.", O),
+    ("require", "gerektirmek", "This job requires patience.", O),
+    ("provide", "sağlamak", "The school provides books.", O),
+    ("increase", "artmak", "Prices increase every year.", O),
+    ("reduce", "azaltmak", "We must reduce waste.", O),
+    ("advice", "tavsiye", "Thank you for your advice.", O),
+    ("society", "toplum", "Society is changing fast.", O),
+    ("health", "sağlık", "Health is more important than money.", O),
+    ("goal", "hedef", "My goal is to speak fluently.", O),
+    ("habit", "alışkanlık", "Reading is a good habit.", O),
+    ("schedule", "program", "I have a busy schedule.", O),
+    # ---- İleri ----
+    ("opportunity", "fırsat", "This is a great opportunity.", I),
+    ("knowledge", "bilgi", "Knowledge grows when we learn.", I),
+    ("independent", "bağımsız", "She is an independent learner.", I),
+    ("achievement", "başarı", "Winning was a great achievement.", I),
+    ("adequate", "yeterli", "The room is adequate for us.", I),
+    ("ambitious", "hırslı", "She is an ambitious student.", I),
+    ("consequence", "sonuç", "Every action has a consequence.", I),
+    ("contribute", "katkıda bulunmak", "Everyone can contribute to the project.", I),
+    ("determine", "belirlemek", "We need to determine the cause.", I),
+    ("efficient", "verimli", "This method is very efficient.", I),
+    ("fluent", "akıcı", "He is fluent in three languages.", I),
+    ("inevitable", "kaçınılmaz", "Change is inevitable.", I),
+    ("reliable", "güvenilir", "She is a reliable friend.", I),
+    ("significant", "kayda değer", "There was a significant improvement.", I),
+    ("sustainable", "sürdürülebilir", "We need sustainable energy.", I),
+    ("thorough", "kapsamlı", "He did a thorough check.", I),
+    ("overcome", "üstesinden gelmek", "You can overcome any obstacle.", I),
+    ("obstacle", "engel", "Fear is the biggest obstacle.", I),
+    ("perspective", "bakış açısı", "Try to see another perspective.", I),
+    ("reluctant", "isteksiz", "He was reluctant to speak.", I),
+    ("vague", "belirsiz", "Her answer was vague.", I),
+    ("evidence", "kanıt", "There is no evidence yet.", I),
+    ("emphasize", "vurgulamak", "Teachers emphasize practice.", I),
+    ("tendency", "eğilim", "He has a tendency to be late.", I),
+    ("willing", "istekli", "I am willing to help.", I),
 ]
 WORDS = [dict(en=a, tr=b, example=c, level=d) for a, b, c, d in WORDS]
 BY_EN = {w["en"]: w for w in WORDS}
-
-SENTENCES = [
-    "I want to improve my English.",
-    "Can I borrow your pen?",
-    "The library is quiet.",
-    "I eat an apple.",
-    "Learning English is a journey.",
-    "You can achieve your goals.",
-    "We must protect nature.",
-    "Our new teacher is friendly.",
-    "This soup is delicious.",
-    "Sleep is important for learning.",
-]
 
 PAGES = ["Bugün", "Kelimeler", "Tekrar", "Konuşma", "Test", "Oyunlar", "Defterim"]
 
@@ -106,6 +193,13 @@ initialise_state()
 
 
 # ---------- Yardımcılar ----------
+def pool():
+    """Kenar çubuğundaki seviye seçimine göre çalışma havuzu."""
+    lvl = st.session_state.get("lvl", "Tümü")
+    items = WORDS if lvl == "Tümü" else [w for w in WORDS if w["level"] == lvl]
+    return items if len(items) >= 5 else WORDS
+
+
 def award(amount):
     """XP ver, günlük hedefi ve seriyi güncelle."""
     ss = st.session_state
@@ -190,7 +284,7 @@ def speak(text, label="🔊 Dinle", key=None):
 
 
 def make_question():
-    word = random.choice(WORDS)
+    word = random.choice(pool())
     wrong = random.sample([w["tr"] for w in WORDS if w["tr"] != word["tr"]], 3)
     return {"word": word, "opts": random.sample(wrong + [word["tr"]], 4),
             "done": False, "ok": None, "id": new_nonce()}
@@ -251,6 +345,8 @@ with st.sidebar:
     st.markdown("# ✏️ LingoPath")
     st.caption("Küçük adımlar, büyük ilerleme.")
     st.radio("Bölüm", PAGES, key="page", label_visibility="collapsed")
+    st.selectbox("Çalışma seviyesi", LEVELS, key="lvl",
+                 help="Test, oyunlar ve konuşma pratiği bu seviyeden kelime/cümle seçer.")
     st.write("")
     st.caption(f"Seviye {1 + xp // 100} · {xp % 100}/100 XP")
     st.progress((xp % 100) / 100)
@@ -269,7 +365,7 @@ if page == "Bugün":
     st.write("Kısa bir çalışma seç. Birkaç dakikalık düzenli pratik bile fark yaratır.")
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("XP", st.session_state.xp)
-    m2.metric("Kelime", len(set(st.session_state.learned)))
+    m2.metric("Kelime", f"{len(set(st.session_state.learned))}/{len(WORDS)}")
     m3.metric("Seri", f"{streak_count()} gün")
     m4.metric("Bugün", f"{min(today_xp(), DAILY_GOAL)}/{DAILY_GOAL}")
 
@@ -282,7 +378,7 @@ if page == "Bugün":
         st.info(f"{len(due_words())} kelime tekrar için hazır.")
         st.button("Tekrara başla", on_click=go, args=("Tekrar",), type="primary")
 
-    todo = [w for w in WORDS if w["en"] not in st.session_state.learned]
+    todo = [w for w in pool() if w["en"] not in st.session_state.learned]
     if todo:
         word = todo[0]
         st.markdown("### Bugünün kelimesi")
@@ -293,7 +389,7 @@ if page == "Bugün":
             add_learned(word["en"])
             st.rerun()
     else:
-        st.success("Tüm kelimeleri defterine ekledin.")
+        st.success("Bu seviyedeki tüm kelimeleri defterine ekledin. Başka bir seviye seçebilirsin.")
 
     st.markdown("### Çalışmaya başla")
     cols = st.columns(4)
@@ -307,7 +403,7 @@ elif page == "Kelimeler":
     st.write("Kelimeyi ara, örnek cümlesini oku ve öğrendiklerini defterine ekle.")
     col1, col2 = st.columns([2, 1])
     query = col1.text_input("Ara", placeholder="journey, elma…").strip().lower()
-    level = col2.selectbox("Seviye", ["Tümü", "Başlangıç", "Orta", "İleri"])
+    level = col2.selectbox("Seviye", LEVELS, key="word_level")
     items = [w for w in WORDS
              if (level == "Tümü" or w["level"] == level)
              and (not query or query in w["en"].lower() or query in w["tr"].lower())]
@@ -369,7 +465,8 @@ elif page == "Tekrar":
 elif page == "Konuşma":
     st.title("🎙️ Konuşma pratiği")
     st.write("Önce örnek cümleyi dinle, sonra mikrofonla kendi sesini kaydet ve sonucu kontrol et.")
-    target = st.selectbox("Çalışılacak cümle", SENTENCES, key="speech_target")
+    sentences = [w["example"] for w in pool()]
+    target = st.selectbox("Çalışılacak cümle", sentences, key="speech_target")
     st.markdown(f"<p class='sentence'>{target}</p>", unsafe_allow_html=True)
     speak(target, "🔊 Örneği dinle", key="speech_example")
     st.info("Tarayıcı mikrofon izni isterse İzin ver'e bas. Sessiz bir ortam seç.")
@@ -481,30 +578,51 @@ elif page == "Oyunlar":
                     label_visibility="collapsed")
 
     if game == "Eşleştirme":
-        st.caption("Beş kelimeyi doğru anlamlarıyla eşleştir.")
         g = st.session_state.g
         if g is None:
+            st.caption("Beş kelimeyi doğru anlamlarıyla eşleştir.")
             if st.button("Oyunu başlat", type="primary"):
-                ws = random.sample(WORDS, 5)
+                ws = random.sample(pool(), 5)
                 st.session_state.g = {"ws": ws, "tr": random.sample([w["tr"] for w in ws], 5),
-                                      "id": new_nonce(), "res": None}
+                                      "id": new_nonce(), "res": None, "shown": {}}
                 st.rerun()
         else:
             answers = {}
-            for w in g["ws"]:
-                a, b = st.columns([1, 2])
-                a.markdown(f"<div class='sentence'>{w['en']}</div>", unsafe_allow_html=True)
-                answers[w["en"]] = b.selectbox(w["en"], ["—"] + g["tr"], key=f"m_{g['id']}_{w['en']}",
-                                               label_visibility="collapsed", disabled=g["res"] is not None)
             if g["res"] is None:
+                if sort_items is not None:
+                    st.caption("Türkçe anlamları sürükleyip doğru İngilizce kelimenin kutusuna bırak. "
+                               "Her kutuya bir anlam koy.")
+                    containers = [{"header": "Anlamlar", "items": list(g["tr"])}] + \
+                                 [{"header": w["en"], "items": []} for w in g["ws"]]
+                    result = sort_items(containers, multi_containers=True, direction="vertical",
+                                        key=f"sort_{g['id']}")
+                    placed = {c["header"]: c["items"] for c in result}
+                    for w in g["ws"]:
+                        answers[w["en"]] = placed.get(w["en"], [])
+                else:
+                    st.caption("Beş kelimeyi doğru anlamlarıyla eşleştir.")
+                    st.info("Sürükle-bırak için: python -m pip install streamlit-sortables")
+                    for w in g["ws"]:
+                        a, b = st.columns([1, 2])
+                        a.markdown(f"<div class='sentence'>{w['en']}</div>", unsafe_allow_html=True)
+                        pick = b.selectbox(w["en"], ["—"] + g["tr"], key=f"m_{g['id']}_{w['en']}",
+                                           label_visibility="collapsed")
+                        answers[w["en"]] = [] if pick == "—" else [pick]
+
                 if st.button("Cevapları kontrol et", type="primary"):
-                    g["res"] = sum(answers[w["en"]] == w["tr"] for w in g["ws"])
+                    g["res"] = sum(answers[w["en"]] == [w["tr"]] for w in g["ws"])
+                    g["shown"] = {en: (v[0] if len(v) == 1 else ("—" if not v else " + ".join(v)))
+                                  for en, v in answers.items()}
                     award(g["res"] * 3)
                     st.rerun()
             else:
                 st.success(f"5 eşleşmeden {g['res']} doğru. +{g['res'] * 3} XP")
                 for w in g["ws"]:
-                    st.write(f"{w['en']} → {w['tr']}")
+                    mine = g["shown"].get(w["en"], "—")
+                    if mine == w["tr"]:
+                        st.write(f"✅ {w['en']} → {w['tr']}")
+                    else:
+                        st.write(f"❌ {w['en']} → {w['tr']}  (senin cevabın: {mine})")
                 if st.button("Yeni oyun"):
                     st.session_state.g = None
                     st.rerun()
@@ -514,7 +632,7 @@ elif page == "Oyunlar":
         s = st.session_state.s
         if s is None:
             if st.button("Oyunu başlat", type="primary"):
-                sent = random.choice(SENTENCES)
+                sent = random.choice([w["example"] for w in pool()])
                 words = sent.rstrip(".?!").split()
                 sh = words[:]
                 random.shuffle(sh)
@@ -543,7 +661,7 @@ elif page == "Oyunlar":
         d = st.session_state.d
         if d is None:
             if st.button("Oyunu başlat", type="primary"):
-                st.session_state.d = {"w": random.choice(WORDS), "id": new_nonce(), "ok": None}
+                st.session_state.d = {"w": random.choice(pool()), "id": new_nonce(), "ok": None}
                 st.rerun()
         else:
             speak(d["w"]["en"], "🔊 Kelimeyi çal", key=f"d_audio_{d['id']}")
