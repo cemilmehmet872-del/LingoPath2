@@ -144,7 +144,253 @@ WORDS = [
 WORDS = [dict(en=a, tr=b, example=c, level=d) for a, b, c, d in WORDS]
 BY_EN = {w["en"]: w for w in WORDS}
 
-PAGES = ["Bugün", "Kelimeler", "Tekrar", "Konuşma", "Test", "Oyunlar", "Defterim"]
+PAGES = ["Bugün", "Kelimeler", "Tekrar", "Konuşma", "Test", "Oyunlar", "Macera",
+         "Günlük Görev", "Rozetler", "İstatistik", "Günlük Konuşma", "AI Sohbet", "Defterim"]
+
+# ---------- Macera: Kayıp Pasaport ----------
+def C(en, tr, to, needs=None):
+    return {"en": en, "tr": tr, "to": to, "needs": needs}
+
+
+ADV_ITEMS = {"map": "🗺️ Harita", "clue": "💡 İpucu", "crystal": "💎 Kristal"}
+ADVENTURE = {
+    "start": {
+        "text": "You arrive at Heathrow Airport in London. The airport is big and busy. "
+                "You open your bag, but your passport is not there!",
+        "tr": "Londra'daki Heathrow Havalimanı'na varıyorsun. Havalimanı büyük ve kalabalık. "
+              "Çantanı açıyorsun ama pasaportun orada değil!",
+        "choices": [
+            C("Check your coat pocket.", "Ceket cebine bak.", "coat"),
+            C("Ask the officer for help.", "Görevliden yardım iste.", "officer"),
+            C("Walk to the café.", "Kafeye yürü.", "cafe"),
+        ],
+    },
+    "coat": {
+        "text": "You check your coat. In the pocket there is a small map of the airport. "
+                "There is no passport, but the map shows a Lost Property Office near Gate 5.",
+        "tr": "Ceketini kontrol ediyorsun. Cebinde havalimanının küçük bir haritası var. Pasaport yok "
+              "ama harita, 5 numaralı kapının yakınında bir Kayıp Eşya Ofisi gösteriyor.",
+        "gives": "map",
+        "choices": [
+            C("Follow the map to the Lost Property Office.", "Haritayı izleyip Kayıp Eşya Ofisi'ne git.", "lost_office"),
+            C("Ask the officer first.", "Önce görevliye sor.", "officer"),
+        ],
+    },
+    "officer": {
+        "text": "The officer is polite but very busy. 'Please be patient,' she says. 'The line is long.'",
+        "tr": "Görevli kibar ama çok meşgul. 'Lütfen sabırlı ol,' diyor. 'Sıra uzun.'",
+        "choices": [
+            C("Wait in line.", "Sırada bekle.", "long_wait"),
+            C("Walk to the café.", "Kafeye yürü.", "cafe"),
+            C("Show your map and ask about the Lost Property Office.",
+              "Haritanı göster ve Kayıp Eşya Ofisi'ni sor.", "lost_office", needs="map"),
+        ],
+    },
+    "long_wait": {
+        "text": "You wait for forty minutes. At last the officer says, 'Sorry, I can not help you here. "
+                "Try the Lost Property Office.' You feel tired and sad.",
+        "tr": "Kırk dakika bekliyorsun. Sonunda görevli, 'Üzgünüm, burada sana yardım edemem. "
+              "Kayıp Eşya Ofisi'ni dene.' diyor. Yorgun ve üzgün hissediyorsun.",
+        "choices": [
+            C("Go to the Lost Property Office.", "Kayıp Eşya Ofisi'ne git.", "lost_office"),
+            C("Give up and go home.", "Pes et ve eve dön.", "end_giveup"),
+        ],
+    },
+    "cafe": {
+        "text": "The café is warm and the coffee smells delicious. A friendly waiter smiles at you. "
+                "'Can I help you?' he asks.",
+        "tr": "Kafe sıcak ve kahve lezzetli kokuyor. Arkadaş canlısı bir garson sana gülümsüyor. "
+              "'Yardım edebilir miyim?' diye soruyor.",
+        "choices": [
+            C("Ask about your passport.", "Pasaportunu sor.", "waiter"),
+            C("Buy a coffee and sit down.", "Bir kahve al ve otur.", "coffee"),
+        ],
+    },
+    "waiter": {
+        "text": "The waiter thinks for a moment. 'Yes! A man found a passport near the door. "
+                "Please be careful with your bag next time,' he says.",
+        "tr": "Garson bir an düşünüyor. 'Evet! Bir adam kapının yanında bir pasaport buldu. "
+              "Lütfen bir dahaki sefere çantana dikkat et.' diyor.",
+        "quiz": "careful", "ok": "waiter_ok", "bad": "waiter_bad",
+    },
+    "waiter_ok": {
+        "text": "The waiter smiles. 'Good! The man took the passport to the Lost Property Office at Gate 5,' "
+                "he says. You thank him and feel confident.",
+        "tr": "Garson gülümsüyor. 'Güzel! Adam pasaportu 5 numaralı kapıdaki Kayıp Eşya Ofisi'ne götürdü.' "
+              "diyor. Ona teşekkür ediyorsun ve kendine güveniyorsun.",
+        "gives": "clue",
+        "choices": [C("Hurry to the Lost Property Office.", "Acele edip Kayıp Eşya Ofisi'ne git.", "lost_office")],
+    },
+    "waiter_bad": {
+        "text": "You do not understand the waiter. He repeats the words slowly and then points to Gate 5.",
+        "tr": "Garsonu anlamıyorsun. Kelimeleri yavaşça tekrar ediyor, sonra 5 numaralı kapıyı gösteriyor.",
+        "choices": [C("Go to Gate 5.", "5 numaralı kapıya git.", "lost_office")],
+    },
+    "coffee": {
+        "text": "You sit down with your coffee and breathe slowly. Then you remember something: "
+                "in the arrivals hall you stopped at the bookshop!",
+        "tr": "Kahvenle oturuyor ve yavaşça nefes alıyorsun. Sonra bir şey hatırlıyorsun: "
+              "geliş salonunda kitapçıda durmuştun!",
+        "choices": [
+            C("Run to the bookshop.", "Kitapçıya koş.", "bookshop"),
+            C("Go to the Lost Property Office.", "Kayıp Eşya Ofisi'ne git.", "lost_office"),
+        ],
+    },
+    "bookshop": {
+        "text": "The bookshop is very quiet. A sign on the wall says: 'Please be quiet.' "
+                "Next to a red book you see something blue... your passport!",
+        "tr": "Kitapçı çok sessiz. Duvardaki bir tabela diyor ki: 'Lütfen sessiz olun.' "
+              "Kırmızı bir kitabın yanında mavi bir şey görüyorsun... pasaportun!",
+        "quiz": "quiet", "ok": "end_secret", "bad": "bookshop_bad",
+    },
+    "bookshop_bad": {
+        "text": "You do not know the word, so you shout 'My passport!' Everyone looks at you. "
+                "The shop assistant says, 'Shh!'",
+        "tr": "Kelimeyi bilmiyorsun ve 'Pasaportum!' diye bağırıyorsun. Herkes sana bakıyor. "
+              "Tezgâhtar 'Şşş!' diyor.",
+        "choices": [C("Say sorry and look again.", "Özür dile ve tekrar bak.", "bookshop")],
+    },
+    "lost_office": {
+        "text": "A kind woman works at the Lost Property Office. 'Hello! Please describe your passport,' she says.",
+        "tr": "Kayıp Eşya Ofisi'nde nazik bir kadın çalışıyor. 'Merhaba! Lütfen pasaportunu tarif et.' diyor.",
+        "quiz": "describe", "ok": "lost_ok", "bad": "lost_bad",
+    },
+    "lost_ok": {
+        "text": "You describe it well: 'It is blue and it has a small photo.' The woman opens a box and smiles. "
+                "'I think we found it!'",
+        "tr": "Pasaportunu iyi tarif ediyorsun: 'Mavi ve küçük bir fotoğrafı var.' Kadın bir kutu açıyor ve "
+              "gülümsüyor. 'Sanırım onu bulduk!'",
+        "choices": [C("Thank her and take the passport.", "Ona teşekkür et ve pasaportu al.", "end_good")],
+    },
+    "lost_bad": {
+        "text": "You do not know what to say. The woman smiles and says, 'Take your time. Let's try again.'",
+        "tr": "Ne diyeceğini bilmiyorsun. Kadın gülümsüyor ve 'Acele etme. Tekrar deneyelim.' diyor.",
+        "choices": [C("Try again calmly.", "Sakin sakin tekrar dene.", "lost_office")],
+    },
+    "end_good": {
+        "end": "good", "title": "Mutlu son", "xp": 20,
+        "text": "You hold your passport in your hand. What a day! You smile and walk out of the airport. "
+                "London is waiting for you.",
+        "tr": "Pasaportun elinde. Ne gündü ama! Gülümseyip havalimanından çıkıyorsun. Londra seni bekliyor.",
+    },
+    "end_secret": {
+        "end": "secret", "title": "Gizli son", "xp": 30,
+        "text": "You take your passport from the shelf. A woman near you laughs. 'You are lucky!' she says. "
+                "You smile, and you walk out into the London sunshine.",
+        "tr": "Pasaportunu raftan alıyorsun. Yanındaki bir kadın gülüyor. 'Çok şanslısın!' diyor. "
+              "Gülümseyip Londra'nın güneşine çıkıyorsun.",
+    },
+    "end_giveup": {
+        "end": "giveup", "title": "Kötü son", "xp": 2,
+        "text": "You sit down and do not try anymore. Without a passport, your trip is over before it begins.",
+        "tr": "Oturuyorsun ve artık denemiyorsun. Pasaportsuz yolculuğun daha başlamadan bitiyor.",
+    },
+}
+PASSPORT_END = {n["end"]: n["title"] for n in ADVENTURE.values() if "end" in n}
+
+FOREST = {
+    "f_start": {
+        "text": "You are a young wizard at the edge of the Enchanted Forest. A big stone gate stops you. "
+                "A deep voice says: 'Speak the magic words!'",
+        "tr": "Büyülü Orman'ın kıyısında genç bir büyücüsün. Büyük bir taş kapı yolunu kesiyor. "
+              "Derin bir ses 'Sihirli sözleri söyle!' diyor.",
+        "say": "Please open the gate.", "ok": "f_path", "bad": "f_gate_bad",
+    },
+    "f_gate_bad": {
+        "text": "The gate stays closed. A small owl laughs. 'Speak slowly and clearly,' it says.",
+        "tr": "Kapı kapalı kalıyor. Küçük bir baykuş gülüyor. 'Yavaş ve net konuş.' diyor.",
+        "choices": [
+            C("Try again.", "Tekrar dene.", "f_start"),
+            C("Look for another way.", "Başka bir yol ara.", "f_river"),
+        ],
+    },
+    "f_path": {
+        "text": "The gate opens! You walk into the forest. The trees are tall and the air is cold. "
+                "You see two paths.",
+        "tr": "Kapı açılıyor! Ormana giriyorsun. Ağaçlar uzun ve hava soğuk. İki yol görüyorsun.",
+        "choices": [
+            C("Take the path to the river.", "Nehre giden yola gir.", "f_river"),
+            C("Take the path to the cave.", "Mağaraya giden yola gir.", "f_cave"),
+        ],
+    },
+    "f_river": {
+        "text": "A friendly water spirit lives at the river. 'Who are you, and what do you want?' it asks.",
+        "tr": "Nehirde arkadaş canlısı bir su ruhu yaşıyor. 'Sen kimsin ve ne istiyorsun?' diye soruyor.",
+        "say": "I want to protect the forest.", "ok": "f_bridge", "bad": "f_river_bad",
+    },
+    "f_river_bad": {
+        "text": "The spirit does not understand you. It shakes its head and points to the cave.",
+        "tr": "Ruh seni anlamıyor. Başını sallıyor ve mağarayı gösteriyor.",
+        "choices": [
+            C("Go to the cave.", "Mağaraya git.", "f_cave"),
+            C("Try to speak again.", "Tekrar konuşmayı dene.", "f_river"),
+        ],
+    },
+    "f_bridge": {
+        "text": "You cross the bridge of light. The spirit gives you a blue crystal. 'Take it to the cave,' it says.",
+        "tr": "Işıktan köprüyü geçiyorsun. Ruh sana mavi bir kristal veriyor. 'Bunu mağaraya götür.' diyor.",
+        "gives": "crystal",
+        "choices": [C("Go to the cave.", "Mağaraya git.", "f_cave")],
+    },
+    "f_cave": {
+        "text": "The cave is dark and cold. In the dark, a big dragon sleeps. It looks sad.",
+        "tr": "Mağara karanlık ve soğuk. Karanlıkta büyük bir ejderha uyuyor. Üzgün görünüyor.",
+        "choices": [
+            C("Speak to the dragon.", "Ejderhayla konuş.", "f_dragon"),
+            C("Walk away.", "Uzaklaş.", "f_end_flee"),
+        ],
+    },
+    "f_dragon": {
+        "text": "The dragon opens one eye. 'Who is there?' it asks in a low voice.",
+        "tr": "Ejderha bir gözünü açıyor. 'Kim var orada?' diye alçak sesle soruyor.",
+        "say": "I think you are thirsty.", "ok": "f_dragon_ok", "bad": "f_dragon_bad",
+    },
+    "f_dragon_ok": {
+        "text": "The dragon smiles a little. 'Yes! I am very thirsty,' it says. 'The river is far away.'",
+        "tr": "Ejderha hafifçe gülümsüyor. 'Evet! Çok susadım.' diyor. 'Nehir çok uzak.'",
+        "choices": [
+            C("Use the blue crystal to bring water.", "Su getirmek için mavi kristali kullan.",
+              "f_end_hero", needs="crystal"),
+            C("Promise to bring water tomorrow.", "Yarın su getireceğine söz ver.", "f_end_friend"),
+        ],
+    },
+    "f_dragon_bad": {
+        "text": "The dragon does not understand and gets angry. Smoke comes from its nose!",
+        "tr": "Ejderha anlamıyor ve kızıyor. Burnundan duman çıkıyor!",
+        "choices": [
+            C("Run away!", "Kaç!", "f_end_flee"),
+            C("Speak again, calmly.", "Sakin sakin tekrar konuş.", "f_dragon"),
+        ],
+    },
+    "f_end_hero": {
+        "end": "hero", "title": "Kahraman son", "xp": 30,
+        "text": "The crystal fills a big bowl with cold water. The dragon drinks and smiles. "
+                "The forest is safe, and you are the hero!",
+        "tr": "Kristal büyük bir kaseyi soğuk suyla dolduruyor. Ejderha içiyor ve gülümsüyor. "
+              "Orman güvende ve kahraman sensin!",
+    },
+    "f_end_friend": {
+        "end": "friend", "title": "Dost son", "xp": 20,
+        "text": "The dragon closes its eyes. 'Thank you for your promise,' it says. "
+                "You walk out of the cave with a new friend.",
+        "tr": "Ejderha gözlerini kapatıyor. 'Sözün için teşekkürler.' diyor. Yeni bir dostla mağaradan çıkıyorsun.",
+    },
+    "f_end_flee": {
+        "end": "flee", "title": "Kaçış sonu", "xp": 3,
+        "text": "You run out of the cave and into the forest. You are safe, but the story ends here.",
+        "tr": "Mağaradan ormana koşuyorsun. Güvendesin ama hikâye burada bitiyor.",
+    },
+}
+FOREST_END = {n["end"]: n["title"] for n in FOREST.values() if "end" in n}
+ADVENTURE.update(FOREST)  # tüm sahneler tek sözlükte
+
+STORIES = {
+    "passport": {"title": "Kayıp Pasaport", "emoji": "🧳", "start": "start", "ends": PASSPORT_END,
+                 "desc": "Londra'da pasaportunu kaybettin. Seçimler yap ve kelime sorularını çöz."},
+    "forest": {"title": "Büyülü Orman", "emoji": "🐉", "start": "f_start", "ends": FOREST_END,
+               "desc": "Fantastik bir dünyada büyücüsün. Engelleri İngilizce cümleleri sesli söyleyerek aş."},
+}
+ENDINGS = {**PASSPORT_END, **FOREST_END}
 
 
 def today():
@@ -152,7 +398,7 @@ def today():
 
 
 # ---------- Kalıcı ilerleme ----------
-PERSIST = ["xp", "learned", "spoken", "speaking_history", "srs", "daily", "streak"]
+PERSIST = ["xp", "learned", "spoken", "speaking_history", "srs", "daily", "streak", "endings"]
 
 
 def load():
@@ -177,15 +423,15 @@ def initialise_state():
         st.session_state.xp = int(data.get("xp", 0) or 0)
         for key, default in [("learned", []), ("spoken", []), ("speaking_history", []),
                              ("srs", {}), ("daily", {"date": today(), "xp": 0}),
-                             ("streak", {"last": None, "count": 0})]:
+                             ("streak", {"last": None, "count": 0}), ("endings", [])]:
             st.session_state[key] = data.get(key, default)
     ses = {"page": "Bugün", "q": None, "round": {"n": 0, "score": 0}, "g": None,
-           "s": None, "d": None, "nonce": 0, "rv_show": False}
+           "s": None, "d": None, "nonce": 0, "rv_show": False, "adv": None}
     for key, default in ses.items():
         st.session_state.setdefault(key, default)
     for key, default in [("learned", []), ("spoken", []), ("speaking_history", []),
                          ("srs", {}), ("daily", {"date": today(), "xp": 0}),
-                         ("streak", {"last": None, "count": 0})]:
+                         ("streak", {"last": None, "count": 0}), ("endings", [])]:
         st.session_state.setdefault(key, default)
 
 
@@ -301,6 +547,109 @@ def make_speech_result(target, heard):
     return ratio, diffs
 
 
+def words_in(text):
+    """Metindeki, kelime listemizde olan İngilizce kelimeler."""
+    seen = []
+    for tok in re.findall(r"[a-z]+", text.lower()):
+        for cand in (tok, tok[:-1] if tok.endswith("s") else tok):
+            if cand in BY_EN and cand not in seen:
+                seen.append(cand)
+                break
+    return seen
+
+
+SPEAK_PASS = 0.70  # bu benzerliğin üstünde kapı açılır
+
+
+def transcribe(data):
+    import speech_recognition as sr
+    recognizer = sr.Recognizer()
+    with sr.AudioFile(BytesIO(data)) as source:
+        recorded = recognizer.record(source)
+    return recognizer.recognize_google(recorded, language="en-US")
+
+
+def stt_error(error):
+    if isinstance(error, ImportError):
+        return "Paket eksik: python -m pip install SpeechRecognition"
+    name = type(error).__name__
+    if "UnknownValue" in name:
+        return "Ses net anlaşılamadı. Daha sessiz bir ortamda, biraz daha yavaş tekrar dene."
+    if "RequestError" in name:
+        return "Tanıma servisine ulaşılamadı. İnternet bağlantını kontrol et ya da yazarak dene."
+    return "Ses çözümlenemedi. Mikrofon iznini ve kaydı kontrol et."
+
+
+def pron_hint(diffs):
+    """Yanlış algılanan kelimeler için kısa telaffuz ipuçları."""
+    tips = []
+    for d in diffs:
+        w = d["expected"]
+        if w == "—":
+            continue
+        if d["heard"] == "—":
+            tip = "bu kelime duyulmadı. Net ve biraz daha yüksek söyle."
+        elif "th" in w:
+            tip = "“th” sesi: dilinin ucunu dişlerinin arasına koy ve hafifçe üfle. s, t ya da f gibi söyleme."
+        elif w.startswith("w"):
+            tip = "“w” için dudaklarını yuvarla. “v” gibi söyleme."
+        elif "r" in w:
+            tip = "“r” sesinde dilin damağa değmesin, geride ve gevşek dursun."
+        elif w.endswith("ed"):
+            tip = "“-ed” sonu kelimeye göre t, d ya da id okunur. Sonu yutma."
+        else:
+            tip = "yavaş söyle ve heceleri ayır."
+        tips.append(f"**{w}**: {tip}")
+    return tips[:3]
+
+
+def adv_enter(nid):
+    """Sahneye geç: eşya ver, soru seçeneklerini hazırla, sonda XP ver."""
+    a = st.session_state.adv
+    node = ADVENTURE[nid]
+    a["node"] = nid
+    a["steps"] += 1
+    a["opts"] = None
+    a["tries"] = 0
+    a["fail"] = None
+    a["pick_id"] = new_nonce()
+    if node.get("gives") and node["gives"] not in a["items"]:
+        a["items"].append(node["gives"])
+    if "quiz" in node:
+        w = BY_EN[node["quiz"]]
+        wrong = random.sample([x["tr"] for x in WORDS if x["tr"] != w["tr"]], 3)
+        a["opts"] = random.sample(wrong + [w["tr"]], 4)
+    if "end" in node:
+        a["bonus"] = 3 * len(a["items"])
+        if node["end"] not in st.session_state.endings:
+            st.session_state.endings.append(node["end"])
+        award(node["xp"] + a["bonus"])
+
+
+def adv_start(story_id):
+    st.session_state.adv = {"story": story_id, "node": STORIES[story_id]["start"], "items": [],
+                            "passed": [], "opts": None, "pick_id": new_nonce(), "steps": 0,
+                            "tries": 0, "fail": None, "flash": None, "bonus": 0}
+
+
+def speak_attempt(nid, node, heard, typed=False):
+    """Söylenen (ya da yazılan) cümleyi değerlendir; geçtiyse sahneyi ilerlet."""
+    a = st.session_state.adv
+    ratio, diffs = make_speech_result(node["say"], heard)
+    if ratio >= SPEAK_PASS:
+        gain = 0
+        if nid not in a["passed"]:
+            a["passed"].append(nid)
+            gain = 2 if typed else (8 if ratio >= 0.95 else 5)
+            award(gain)
+        a["flash"] = ("ok", f"Büyü çalıştı! Benzerlik %{round(ratio * 100)}."
+                      + (f" +{gain} XP" if gain else ""))
+        adv_enter(node["ok"])
+    else:
+        a["tries"] += 1
+        a["fail"] = {"heard": heard, "ratio": round(ratio * 100), "tips": pron_hint(diffs)}
+
+
 # ---------- Görünüm: kareli defter ----------
 st.markdown("""
 <style>
@@ -391,9 +740,15 @@ if page == "Bugün":
     else:
         st.success("Bu seviyedeki tüm kelimeleri defterine ekledin. Başka bir seviye seçebilirsin.")
 
+    st.markdown("### 🎯 Günün görevi")
+    st.caption(f"Bugün {min(today_xp(), DAILY_GOAL)}/{DAILY_GOAL} XP kazandın. Günlük görevler bölümünden hedeflerini kontrol et.")
+    if st.button("Günlük görevleri gör"):
+        go("Günlük Görev")
+        st.rerun()
+
     st.markdown("### Çalışmaya başla")
-    cols = st.columns(4)
-    for col, name in zip(cols, ["Kelimeler", "Konuşma", "Test", "Oyunlar"]):
+    cols = st.columns(5)
+    for col, name in zip(cols, ["Kelimeler", "Konuşma", "Test", "Oyunlar", "Macera"]):
         col.button(name, on_click=go, args=(name,), use_container_width=True)
 
 
@@ -682,6 +1037,297 @@ elif page == "Oyunlar":
                     st.rerun()
 
 
+# ---------- GÜNLÜK GÖREV ----------
+elif page == "Günlük Görev":
+    st.title("🎯 Günün görevi")
+    st.write("Bugün küçük bir hedef seç ve tamamladıkça ilerlemeni takip et.")
+    daily_xp = today_xp()
+    mission_items = [
+        ("Bir kelimeyi defterine ekle", len(set(st.session_state.learned)) > 0, "Kelimeler bölümünden yeni bir kelime ekle."),
+        ("Bir test sorusu çöz", st.session_state.round.get("n", 0) > 0, "Test bölümünde bir soru cevapla."),
+        ("Bir konuşma denemesi yap", len(st.session_state.speaking_history) > 0, "Konuşma bölümünde mikrofonla dene."),
+        ("En az 30 XP kazan", daily_xp >= DAILY_GOAL, f"Bugünkü XP: {daily_xp}/{DAILY_GOAL}."),
+    ]
+    done_count = sum(1 for _, done, _ in mission_items if done)
+    st.progress(done_count / len(mission_items))
+    st.caption(f"{done_count}/{len(mission_items)} görev tamamlandı")
+    for title, done, detail in mission_items:
+        st.write(("✅" if done else "⬜") + f" **{title}** — {detail}")
+    if done_count == len(mission_items):
+        st.success("Harika! Günlük görevlerin hepsi tamamlandı.")
+
+# ---------- ROZETLER ----------
+elif page == "Rozetler":
+    st.title("🏅 Başarı rozetleri")
+    learned_count = len(set(st.session_state.learned))
+    endings_count = len(st.session_state.endings)
+    badges = [
+        ("🌱 İlk Adım", "İlk kelimeni defterine ekle.", learned_count >= 1),
+        ("📚 Kelime Avcısı", "10 kelime öğren.", learned_count >= 10),
+        ("🧠 Kelime Ustası", "25 kelime öğren.", learned_count >= 25),
+        ("⚡ XP Biriktirici", "100 XP kazan.", st.session_state.xp >= 100),
+        ("🔥 İstikrarlı", "3 günlük seri yakala.", streak_count() >= 3),
+        ("🎙️ Konuşkan", "İlk konuşma denemeni kaydet.", len(st.session_state.speaking_history) >= 1),
+        ("🗺️ Hikâye Kaşifi", "Bir macera sonu keşfet.", endings_count >= 1),
+        ("🏆 Çoklu Son", "3 farklı macera sonu keşfet.", endings_count >= 3),
+    ]
+    unlocked = sum(1 for _, _, ok in badges if ok)
+    st.progress(unlocked / len(badges))
+    st.caption(f"{unlocked}/{len(badges)} rozet açıldı")
+    for title, desc, ok in badges:
+        with st.container(border=True):
+            st.write(f"{'🏅' if ok else '🔒'} **{title}**")
+            st.caption(desc)
+            st.write("Açıldı ✅" if ok else "Henüz açılmadı")
+
+# ---------- İSTATİSTİK ----------
+elif page == "İstatistik":
+    st.title("📊 Gelişim istatistikleri")
+    learned_count = len(set(st.session_state.learned))
+    history = st.session_state.speaking_history
+    avg_similarity = round(sum(x.get("similarity", 0) for x in history) / len(history)) if history else 0
+    c1, c2 = st.columns(2)
+    c1.metric("Toplam XP", st.session_state.xp)
+    c2.metric("Seviye", 1 + st.session_state.xp // 100)
+    c1.metric("Öğrenilen kelime", f"{learned_count}/{len(WORDS)}")
+    c2.metric("Bulunan macera sonu", f"{len(set(st.session_state.endings))}/{len(ENDINGS)}")
+    c1.metric("Konuşma denemesi", len(history))
+    c2.metric("Ortalama metin benzerliği", f"%{avg_similarity}")
+    st.subheader("Seviyelere göre kelime ilerlemesi")
+    for level_name in ("Başlangıç", "Orta", "İleri"):
+        total = sum(1 for w in WORDS if w["level"] == level_name)
+        count = sum(1 for en in set(st.session_state.learned) if en in BY_EN and BY_EN[en]["level"] == level_name)
+        st.write(f"**{level_name}:** {count}/{total}")
+        st.progress(count / total if total else 0)
+    st.caption("Konuşma benzerliği yalnızca yazıya çevrilen metinleri karşılaştırır; gerçek telaffuz puanı değildir.")
+
+# ---------- GÜNLÜK KONUŞMA ----------
+elif page == "Günlük Konuşma":
+    st.title("💬 Günlük konuşma senaryoları")
+    scenarios = {
+        "Kafede sipariş": {
+            "npc": "Barista: Hello! What would you like to drink?",
+            "prompt": "İçecek sipariş et. Örnek: I'd like a tea, please.",
+            "keywords": ["tea", "coffee", "water", "juice", "like", "please"],
+            "next": "Barista: Sure! Would you like anything to eat?"
+        },
+        "Yeni biriyle tanışma": {
+            "npc": "Alex: Hi! What's your name, and where are you from?",
+            "prompt": "Adını ve nereli olduğunu söyle. Örnek: My name is Alex. I'm from Turkey.",
+            "keywords": ["my name", "i am", "i'm", "from"],
+            "next": "Alex: Nice to meet you! What do you like doing?"
+        },
+        "Yol tarifi sorma": {
+            "npc": "Stranger: Hello! Can I help you?",
+            "prompt": "Bir yere nasıl gideceğini sor. Örnek: How can I get to the station, please?",
+            "keywords": ["where", "how", "station", "street", "get to", "please"],
+            "next": "Stranger: Go straight ahead and turn left."
+        },
+        "Otelde giriş": {
+            "npc": "Receptionist: Good evening! Do you have a reservation?",
+            "prompt": "Rezervasyonun olduğunu veya oda istediğini söyle.",
+            "keywords": ["reservation", "room", "yes", "no", "book", "name"],
+            "next": "Receptionist: Could I have your name, please?"
+        },
+    }
+    chosen = st.selectbox("Senaryo seç", list(scenarios))
+    scenario = scenarios[chosen]
+    st.markdown(f"**{scenario['npc']}**")
+    st.caption(scenario["prompt"])
+    reply = st.text_input("İngilizce cevabın", key="daily_dialogue_reply")
+    if st.button("Cevabımı kontrol et", type="primary", disabled=not reply.strip()):
+        low = reply.lower()
+        if any(k in low for k in scenario["keywords"]):
+            st.success("Güzel cevap! Diyalog devam ediyor.")
+            st.write(f"**{scenario['next']}**")
+            st.write("İpucu: Tam cümle kurmaya ve kibar ifadeler kullanmaya çalış.")
+            if "dialogue_done" not in st.session_state:
+                st.session_state.dialogue_done = []
+            if chosen not in st.session_state.dialogue_done:
+                st.session_state.dialogue_done.append(chosen)
+                award(5)
+                st.success("+5 XP")
+        else:
+            st.warning("Bir kez daha dene. İpucundaki kelimelerden birini kullanabilir veya örnek cümleden yararlanabilirsin.")
+    st.caption("Bu bölüm hazır senaryolar ve kelime ipuçlarıyla çalışır; serbest yapay zekâ sohbeti değildir.")
+
+# ---------- AI SOHBET ----------
+elif page == "AI Sohbet":
+    st.title("🤖 Yapay zekâ ile İngilizce sohbet")
+    st.write("Kendi OpenAI API anahtarınla serbest sohbet edebilirsin. Anahtar bu oturumda kullanılır; dosyaya kaydedilmez.")
+    api_key = st.text_input("OpenAI API anahtarı", type="password", help="API kullanımı ücretlendirmeye tabi olabilir.")
+    level = st.selectbox("Sohbet seviyen", ["Başlangıç", "Orta", "İleri"], key="ai_chat_level")
+    if "ai_messages" not in st.session_state:
+        st.session_state.ai_messages = []
+    for msg in st.session_state.ai_messages[-20:]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+    user_msg = st.chat_input("İngilizce yaz veya soru sor…")
+    if user_msg:
+        st.session_state.ai_messages.append({"role": "user", "content": user_msg})
+        if not api_key:
+            st.warning("Gerçek yapay zekâ yanıtı için API anahtarını girmen gerekiyor.")
+        else:
+            try:
+                from openai import OpenAI
+                client = OpenAI(api_key=api_key)
+                with st.spinner("Yanıt hazırlanıyor…"):
+                    response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "system", "content": (
+                            f"You are a friendly English tutor for a Turkish learner at {level} level. "
+                            "Reply mainly in simple English, then briefly explain corrections in Turkish. "
+                            "Be encouraging and keep answers concise."
+                        )}] + st.session_state.ai_messages[-12:]
+                    )
+                answer = response.choices[0].message.content or "Let's try another question!"
+                st.session_state.ai_messages.append({"role": "assistant", "content": answer})
+                st.rerun()
+            except ImportError:
+                st.error("OpenAI paketi eksik. Kurmak için: python -m pip install openai")
+            except Exception as error:
+                st.error("Sohbet servisine bağlanılamadı. API anahtarını ve internet bağlantını kontrol et.")
+                st.caption(f"Hata türü: {type(error).__name__}")
+    if st.button("Sohbet geçmişini temizle"):
+        st.session_state.ai_messages = []
+        st.rerun()
+
+# ---------- MACERA ----------
+elif page == "Macera":
+    a = st.session_state.adv
+    found = st.session_state.endings
+
+    if a is None:
+        st.title("🗺️ Macera")
+        st.write("İngilizce okuyarak ilerle. Bazı engelleri kelime sorularıyla, bazılarını da "
+                 "cümleleri sesli söyleyerek aşarsın.")
+        for sid, s in STORIES.items():
+            st.subheader(f"{s['emoji']} {s['title']}")
+            st.write(s["desc"])
+            st.caption("Sonlar: " + " · ".join(
+                (f"✅ {t}" if k in found else "▫️ ???") for k, t in s["ends"].items()))
+            if st.button("Başla", key=f"adv_start_{sid}", type="primary"):
+                adv_start(sid)
+                st.rerun()
+    else:
+        story = STORIES[a["story"]]
+        nid = a["node"]
+        node = ADVENTURE[nid]
+        st.title(f"{story['emoji']} {story['title']}")
+
+        top1, top2 = st.columns([3, 1])
+        top1.caption("Çanta: " + (", ".join(ADV_ITEMS[i] for i in a["items"]) or "boş")
+                     + f" · Sonlar: {sum(k in found for k in story['ends'])}/{len(story['ends'])}")
+        if top2.button("↩️ Baştan", use_container_width=True):
+            st.session_state.adv = None
+            st.rerun()
+
+        if a.get("flash"):
+            kind, msg = a["flash"]
+            (st.success if kind == "ok" else st.warning)(msg)
+            a["flash"] = None
+
+        st.markdown(f"<p class='sentence'>{node['text']}</p>", unsafe_allow_html=True)
+
+        is_quiz, is_speak, is_end = "quiz" in node, "say" in node, "end" in node
+        if is_quiz:
+            st.caption("Türkçe çeviri, soruyu cevapladıktan sonra açılır.")
+        else:
+            with st.expander("Türkçesi"):
+                st.write(node["tr"])
+
+        gloss = [e for e in words_in(node["text"]) if e != node.get("quiz")][:5]
+        if gloss:
+            with st.expander("📖 Bu sahnedeki kelimeler"):
+                for en in gloss:
+                    c1, c2 = st.columns([3, 2])
+                    c1.markdown(f"**{en}** — {BY_EN[en]['tr']}")
+                    if en in st.session_state.learned:
+                        c2.caption("Defterinde")
+                    elif c2.button("Ekle (+10 XP)", key=f"adv_add_{en}_{a['steps']}"):
+                        add_learned(en)
+                        st.rerun()
+
+        if is_end:
+            total = node["xp"] + a.get("bonus", 0)
+            st.success(f"🏁 {node['title']} · +{total} XP"
+                       + (f" (eşya bonusu: +{a['bonus']})" if a.get("bonus") else ""))
+            st.caption(f"Bu hikâyede bulunan sonlar: "
+                       f"{sum(k in found for k in story['ends'])}/{len(story['ends'])}")
+            c1, c2 = st.columns(2)
+            if c1.button("Yeniden oyna", type="primary", use_container_width=True):
+                adv_start(a["story"])
+                st.rerun()
+            if c2.button("Hikâye listesi", use_container_width=True):
+                st.session_state.adv = None
+                st.rerun()
+
+        elif is_quiz:
+            w = BY_EN[node["quiz"]]
+            st.markdown(f"**Soru:** “{w['en']}” ne demek?")
+            pick = st.radio("Anlamı", a["opts"], index=None, key=f"adv_pick_{a['pick_id']}",
+                            label_visibility="collapsed")
+            if st.button("Cevapla", type="primary", disabled=pick is None):
+                ok = pick == w["tr"]
+                if ok and nid not in a["passed"]:
+                    a["passed"].append(nid)
+                    award(5)
+                    a["flash"] = ("ok", f"Doğru! {w['en']} = {w['tr']}. +5 XP")
+                elif ok:
+                    a["flash"] = ("ok", f"Doğru! {w['en']} = {w['tr']}.")
+                else:
+                    a["flash"] = ("bad", f"Olmadı. {w['en']} = {w['tr']}")
+                adv_enter(node["ok"] if ok else node["bad"])
+                st.rerun()
+
+        elif is_speak:
+            st.markdown("#### 🎙️ Sihirli sözleri söyle")
+            st.markdown(f"<p class='sentence'>“{node['say']}”</p>", unsafe_allow_html=True)
+            speak(node["say"], "🔊 Örneği dinle", key=f"adv_say_{a['pick_id']}")
+            st.caption(f"Kapının açılması için metin benzerliği en az %{round(SPEAK_PASS * 100)} olmalı.")
+
+            if a.get("fail"):
+                f = a["fail"]
+                st.warning(f"Kapı açılmadı. Duyulan: “{f['heard']}” · benzerlik %{f['ratio']}")
+                for tip in f["tips"]:
+                    st.markdown(f"- {tip}")
+
+            audio = st.audio_input("🎤 Kaydı başlatmak için mikrofon düğmesine bas",
+                                   key=f"adv_audio_{a['pick_id']}_{a['tries']}")
+            if audio is not None and st.button("Söyle ve kontrol et", type="primary",
+                                               use_container_width=True):
+                try:
+                    with st.spinner("Söylediklerin yazıya çevriliyor…"):
+                        heard = transcribe(audio.getvalue())
+                except Exception as error:
+                    st.error(stt_error(error))
+                else:
+                    speak_attempt(nid, node, heard)
+                    st.rerun()
+
+            with st.expander("Mikrofon çalışmıyor mu? Yazarak dene"):
+                typed = st.text_input("Cümleyi yaz", key=f"adv_txt_{a['pick_id']}_{a['tries']}")
+                if st.button("Yazdığımı kontrol et", disabled=not typed.strip()):
+                    speak_attempt(nid, node, typed, typed=True)
+                    st.rerun()
+                st.caption("Yazarak geçersen sadece +2 XP alırsın.")
+
+            if a["tries"] >= 2:
+                st.caption("Birkaç kez denedin. İstersen başka bir yol seçebilirsin.")
+                if st.button("Başka yol dene"):
+                    adv_enter(node["bad"])
+                    st.rerun()
+
+        else:
+            for i, c in enumerate(node["choices"]):
+                if c["needs"] and c["needs"] not in a["items"]:
+                    continue
+                label = c["en"] + (f"  ({ADV_ITEMS[c['needs']]})" if c["needs"] else "")
+                if st.button(label, key=f"adv_c_{a['steps']}_{i}", help=c["tr"], use_container_width=True):
+                    adv_enter(c["to"])
+                    st.rerun()
+
+
 # ---------- DEFTERİM ----------
 elif page == "Defterim":
     st.title("Defterim")
@@ -691,7 +1337,8 @@ elif page == "Defterim":
     c2.metric("Seviye", 1 + st.session_state.xp // 100)
     c3.metric("Kelime", len(learned))
     c4.metric("Seri", f"{streak_count()} gün")
-    st.caption(f"Sonraki seviyeye {100 - st.session_state.xp % 100} XP.")
+    st.caption(f"Sonraki seviyeye {100 - st.session_state.xp % 100} XP. "
+               f"Macerada bulunan son: {len(st.session_state.endings)}/{len(ENDINGS)}.")
 
     st.subheader("Öğrendiklerim")
     if learned:
@@ -729,6 +1376,8 @@ elif page == "Defterim":
                 st.session_state.daily = {"date": today(), "xp": 0}
                 st.session_state.streak = {"last": None, "count": 0}
                 st.session_state.q = st.session_state.g = st.session_state.s = st.session_state.d = None
+                st.session_state.endings = []
+                st.session_state.adv = None
                 st.session_state.round = {"n": 0, "score": 0}
                 save()
                 st.rerun()
