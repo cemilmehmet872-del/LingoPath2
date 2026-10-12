@@ -155,8 +155,7 @@ def C(en, tr, to, needs=None):
 ADV_ITEMS = {"map": "🗺️ Harita", "clue": "💡 İpucu", "crystal": "💎 Kristal"}
 ADVENTURE = {
     "start": {
-        "text": "You arrive at Heathrow Airport in London. The airport is big and busy. "
-                "You open your bag, but your passport is not there!",
+        "text": "After a long flight, you finally arrive at Heathrow Airport in London. Rain taps against the huge glass roof, suitcases roll across the floor, and announcements echo above the crowd. You are excited to begin your trip, but when you open your bag, your passport is missing. Your train leaves in two hours. You take a deep breath and decide not to give up.",
         "tr": "Londra'daki Heathrow Havalimanı'na varıyorsun. Havalimanı büyük ve kalabalık. "
               "Çantanı açıyorsun ama pasaportun orada değil!",
         "choices": [
@@ -166,24 +165,23 @@ ADVENTURE = {
         ],
     },
     "coat": {
-        "text": "You check your coat. In the pocket there is a small map of the airport. "
-                "There is no passport, but the map shows a Lost Property Office near Gate 5.",
+        "text": "You check every pocket of your coat. At first you find only a receipt and an old ticket. Then your fingers touch a folded piece of paper: an airport map! There is still no passport, but a red circle marks the Lost Property Office near Gate 5. You remember that you hurried past that gate when you arrived. Maybe someone has found your passport.",
         "tr": "Ceketini kontrol ediyorsun. Cebinde havalimanının küçük bir haritası var. Pasaport yok "
               "ama harita, 5 numaralı kapının yakınında bir Kayıp Eşya Ofisi gösteriyor.",
         "gives": "map",
         "choices": [
-            C("Follow the map to the Lost Property Office.", "Haritayı izleyip Kayıp Eşya Ofisi'ne git.", "lost_office"),
+            C("Follow the map through the terminal.", "Haritayı izleyerek terminalden geç.", "terminal_map"),
             C("Ask the officer first.", "Önce görevliye sor.", "officer"),
         ],
     },
     "officer": {
-        "text": "The officer is polite but very busy. 'Please be patient,' she says. 'The line is long.'",
+        "text": "You approach an information desk. The officer is polite, but three worried travelers are already waiting. A radio crackles beside her and a phone keeps ringing. 'I will help you as soon as I can,' she says. 'The line is long today.' You notice a sign pointing toward the security desk and another toward the café.",
         "tr": "Görevli kibar ama çok meşgul. 'Lütfen sabırlı ol,' diyor. 'Sıra uzun.'",
         "choices": [
             C("Wait in line.", "Sırada bekle.", "long_wait"),
             C("Walk to the café.", "Kafeye yürü.", "cafe"),
             C("Show your map and ask about the Lost Property Office.",
-              "Haritanı göster ve Kayıp Eşya Ofisi'ni sor.", "lost_office", needs="map"),
+              "Haritanı göster ve Kayıp Eşya Ofisi'ni sor.", "terminal_map", needs="map"),
         ],
     },
     "long_wait": {
@@ -192,18 +190,18 @@ ADVENTURE = {
         "tr": "Kırk dakika bekliyorsun. Sonunda görevli, 'Üzgünüm, burada sana yardım edemem. "
               "Kayıp Eşya Ofisi'ni dene.' diyor. Yorgun ve üzgün hissediyorsun.",
         "choices": [
-            C("Go to the Lost Property Office.", "Kayıp Eşya Ofisi'ne git.", "lost_office"),
+            C("Ask a security guard for directions.", "Bir güvenlik görevlisinden yol tarifi iste.", "security_desk"),
             C("Give up and go home.", "Pes et ve eve dön.", "end_giveup"),
         ],
     },
     "cafe": {
-        "text": "The café is warm and the coffee smells delicious. A friendly waiter smiles at you. "
-                "'Can I help you?' he asks.",
+        "text": "The café is warm, and the smell of fresh coffee reminds you that you have not eaten since the flight. A waiter with a green apron notices your worried face. 'You look as if you have lost something,' he says kindly. Outside the window, rain runs down the glass while travelers hurry past with their bags.",
         "tr": "Kafe sıcak ve kahve lezzetli kokuyor. Arkadaş canlısı bir garson sana gülümsüyor. "
               "'Yardım edebilir miyim?' diye soruyor.",
         "choices": [
             C("Ask about your passport.", "Pasaportunu sor.", "waiter"),
             C("Buy a coffee and sit down.", "Bir kahve al ve otur.", "coffee"),
+            C("Ask the waiter if anyone called about a passport.", "Garsona pasaport hakkında arayan olup olmadığını sor.", "phone_call"),
         ],
     },
     "waiter": {
@@ -251,7 +249,7 @@ ADVENTURE = {
         "choices": [C("Say sorry and look again.", "Özür dile ve tekrar bak.", "bookshop")],
     },
     "lost_office": {
-        "text": "A kind woman works at the Lost Property Office. 'Hello! Please describe your passport,' she says.",
+        "text": "At Gate 5, you find a small office filled with umbrellas, coats, toys, and bags. A kind woman looks up from a computer. 'Hello. We have received several items today,' she says. 'Please describe your passport carefully. If we can identify it, I will check the secure drawer.' You feel nervous, but you are finally in the right place.",
         "tr": "Kayıp Eşya Ofisi'nde nazik bir kadın çalışıyor. 'Merhaba! Lütfen pasaportunu tarif et.' diyor.",
         "quiz": "describe", "ok": "lost_ok", "bad": "lost_bad",
     },
@@ -260,17 +258,38 @@ ADVENTURE = {
                 "'I think we found it!'",
         "tr": "Pasaportunu iyi tarif ediyorsun: 'Mavi ve küçük bir fotoğrafı var.' Kadın bir kutu açıyor ve "
               "gülümsüyor. 'Sanırım onu bulduk!'",
-        "choices": [C("Thank her and take the passport.", "Ona teşekkür et ve pasaportu al.", "end_good")],
+        "choices": [C("Confirm your details and collect it.", "Bilgilerini doğrula ve pasaportu teslim al.", "identity_check")],
     },
     "lost_bad": {
         "text": "You do not know what to say. The woman smiles and says, 'Take your time. Let's try again.'",
         "tr": "Ne diyeceğini bilmiyorsun. Kadın gülümsüyor ve 'Acele etme. Tekrar deneyelim.' diyor.",
         "choices": [C("Try again calmly.", "Sakin sakin tekrar dene.", "lost_office")],
     },
+    "terminal_map": {
+        "text": "You follow the map past a row of shops and a huge departures board. The board changes with a loud beep, and for a moment you worry that you will miss your train. A cleaner points toward a quieter corridor. At the end, you see Gate 5 and a sign for Lost Property. You are closer, but you still need to explain your problem clearly.",
+        "tr": "Haritayı izleyerek dükkânları ve büyük uçuş ekranını geçiyorsun. Ekran sesle değişiyor ve bir an trenini kaçırmaktan korkuyorsun. Bir temizlik görevlisi sessiz koridoru gösteriyor. Koridorun sonunda 5 numaralı kapıyı ve Kayıp Eşya tabelasını görüyorsun.",
+        "gives": "map",
+        "choices": [C("Enter the Lost Property Office.", "Kayıp Eşya Ofisi'ne gir.", "lost_office"), C("Ask the security guard to confirm the way.", "Güvenlik görevlisinden yolu doğrulamasını iste.", "security_desk")],
+    },
+    "security_desk": {
+        "text": "A security guard listens carefully. He asks when you last saw the passport and whether your bag was open. You explain that you stopped near the bookshop after landing. He writes down the location and says, 'Check Lost Property first. If it is not there, come back and we will help you.' His calm advice gives you a plan.",
+        "tr": "Bir güvenlik görevlisi seni dikkatle dinliyor. Pasaportu en son ne zaman gördüğünü ve çantanın açık olup olmadığını soruyor. İnişten sonra kitapçının yanında durduğunu anlatıyorsun. Konumu not edip önce Kayıp Eşya Ofisi'ne bakmanı söylüyor.",
+        "choices": [C("Go to Lost Property.", "Kayıp Eşya Ofisi'ne git.", "lost_office"), C("Check the bookshop first.", "Önce kitapçıya bak.", "bookshop")],
+    },
+    "phone_call": {
+        "text": "The waiter checks with the manager, who remembers a call from the Lost Property Office. Someone found a blue passport and reported it. The manager cannot promise it is yours, but he tells you to bring a description and your full name. For the first time, the problem feels solvable.",
+        "tr": "Garson müdüre danışıyor. Müdür, Kayıp Eşya Ofisi'nden gelen bir telefonu hatırlıyor. Birisi mavi bir pasaport bulup bildirmiş. Bunun senin pasaportun olduğundan emin değil ama tarifini ve tam adını hazırlamanı söylüyor.",
+        "gives": "clue",
+        "choices": [C("Go to Lost Property with the clue.", "İpucuyla Kayıp Eşya Ofisi'ne git.", "lost_office")],
+    },
+    "identity_check": {
+        "text": "The woman asks you to spell your surname and check the photograph. You answer slowly and carefully. She compares the details with her computer, then slides the passport across the counter. 'Please keep it somewhere safe,' she says. You promise you will. You have learned that asking for help in English can turn a frightening day around.",
+        "tr": "Kadın soyadını harf harf söylemeni ve fotoğrafı kontrol etmeni istiyor. Yavaşça cevap veriyorsun. Bilgileri bilgisayarla karşılaştırıp pasaportu sana uzatıyor. Güvenli bir yerde tutmanı söylüyor. İngilizce yardım istemenin zor bir günü değiştirebildiğini öğreniyorsun.",
+        "choices": [C("Thank her and leave the airport.", "Ona teşekkür et ve havalimanından ayrıl.", "end_good")],
+    },
     "end_good": {
         "end": "good", "title": "Mutlu son", "xp": 20,
-        "text": "You hold your passport in your hand. What a day! You smile and walk out of the airport. "
-                "London is waiting for you.",
+        "text": "The woman checks the passport number and asks you to confirm your name. At last, she returns it to you. Relief washes over you. You thank her, put the passport in a zipped pocket, and take a photo of the pocket as a reminder. The rain has stopped. Outside, London buses shine in the wet street, and your adventure can finally begin.",
         "tr": "Pasaportun elinde. Ne gündü ama! Gülümseyip havalimanından çıkıyorsun. Londra seni bekliyor.",
     },
     "end_secret": {
@@ -290,8 +309,7 @@ PASSPORT_END = {n["end"]: n["title"] for n in ADVENTURE.values() if "end" in n}
 
 FOREST = {
     "f_start": {
-        "text": "You are a young wizard at the edge of the Enchanted Forest. A big stone gate stops you. "
-                "A deep voice says: 'Speak the magic words!'",
+        "text": "At sunrise, you reach the edge of the Enchanted Forest, carrying a small lantern and a letter from the village elder. For weeks, a strange silver mist has covered the trees, and the forest animals have stopped returning home. A giant stone gate blocks the path. Blue symbols glow across its surface. From somewhere inside, a deep voice asks, 'Who seeks to enter? Speak the magic words!'",
         "tr": "Büyülü Orman'ın kıyısında genç bir büyücüsün. Büyük bir taş kapı yolunu kesiyor. "
               "Derin bir ses 'Sihirli sözleri söyle!' diyor.",
         "say": "Please open the gate.", "ok": "f_path", "bad": "f_gate_bad",
@@ -305,16 +323,16 @@ FOREST = {
         ],
     },
     "f_path": {
-        "text": "The gate opens! You walk into the forest. The trees are tall and the air is cold. "
-                "You see two paths.",
+        "text": "The symbols flash, and the stone gate slowly opens with a sound like distant thunder. You step into the forest. The trees are so tall that their branches hide the sky, and pale lights drift between their roots. Your lantern flickers even though there is no wind. Ahead, two paths split around an ancient tree: one descends toward a river, and the other climbs toward a dark cave. A third, almost hidden trail leads to a ruined tower.",
         "tr": "Kapı açılıyor! Ormana giriyorsun. Ağaçlar uzun ve hava soğuk. İki yol görüyorsun.",
         "choices": [
             C("Take the path to the river.", "Nehre giden yola gir.", "f_river"),
             C("Take the path to the cave.", "Mağaraya giden yola gir.", "f_cave"),
+            C("Explore the ruined tower.", "Yıkık kuleyi keşfet.", "f_tower"),
         ],
     },
     "f_river": {
-        "text": "A friendly water spirit lives at the river. 'Who are you, and what do you want?' it asks.",
+        "text": "The river is bright as glass, but it makes no sound. A water spirit rises from the surface, its hair flowing like blue ribbons. 'The river is losing its song,' it says. 'The silver mist has stolen the heart of the forest. Who are you, and what do you want?' The spirit watches you carefully, waiting to hear whether you have come to help or to take something.",
         "tr": "Nehirde arkadaş canlısı bir su ruhu yaşıyor. 'Sen kimsin ve ne istiyorsun?' diye soruyor.",
         "say": "I want to protect the forest.", "ok": "f_bridge", "bad": "f_river_bad",
     },
@@ -323,6 +341,7 @@ FOREST = {
         "tr": "Ruh seni anlamıyor. Başını sallıyor ve mağarayı gösteriyor.",
         "choices": [
             C("Go to the cave.", "Mağaraya git.", "f_cave"),
+            C("Ask the spirit about the ruined tower.", "Ruha yıkık kuleyi sor.", "f_tower"),
             C("Try to speak again.", "Tekrar konuşmayı dene.", "f_river"),
         ],
     },
@@ -333,15 +352,16 @@ FOREST = {
         "choices": [C("Go to the cave.", "Mağaraya git.", "f_cave")],
     },
     "f_cave": {
-        "text": "The cave is dark and cold. In the dark, a big dragon sleeps. It looks sad.",
+        "text": "The cave entrance is covered in scratch marks, and the air smells of rain and stone. Your lantern reveals old drawings on the walls: a dragon, a crystal, and a tree with silver leaves. Deep inside, a huge dragon sleeps with its head resting on its claws. It looks frightening at first, but its eyes are wet and its breathing is weak. A broken chain lies beside it.",
         "tr": "Mağara karanlık ve soğuk. Karanlıkta büyük bir ejderha uyuyor. Üzgün görünüyor.",
         "choices": [
             C("Speak to the dragon.", "Ejderhayla konuş.", "f_dragon"),
+            C("Examine the drawings on the wall.", "Duvardaki çizimleri incele.", "f_wall"),
             C("Walk away.", "Uzaklaş.", "f_end_flee"),
         ],
     },
     "f_dragon": {
-        "text": "The dragon opens one eye. 'Who is there?' it asks in a low voice.",
+        "text": "A pebble slips beneath your boot. The dragon opens one golden eye, then slowly lifts its head. 'Who is there?' it asks. Its voice shakes dust from the ceiling. You notice an empty bowl beside it and a silver mark around its neck, matching the symbols on the gate. The dragon does not seem angry so much as exhausted and terribly thirsty.",
         "tr": "Ejderha bir gözünü açıyor. 'Kim var orada?' diye alçak sesle soruyor.",
         "say": "I think you are thirsty.", "ok": "f_dragon_ok", "bad": "f_dragon_bad",
     },
@@ -361,6 +381,18 @@ FOREST = {
             C("Run away!", "Kaç!", "f_end_flee"),
             C("Speak again, calmly.", "Sakin sakin tekrar konuş.", "f_dragon"),
         ],
+    },
+    "f_tower": {
+        "text": "The ruined tower leans over the trees. Inside, dust covers broken shelves and a map of the forest lies beneath a cracked window. You discover a journal written by the last forest keeper. One sentence is still readable: 'The heart will wake when water, courage, and kindness meet.' A small silver key is tied to the page.",
+        "tr": "Yıkık kule ağaçların üzerine eğilmiş. İçeride tozlu raflar ve çatlak pencerenin altında bir orman haritası var. Son orman koruyucusunun günlüğünü buluyorsun. Bir cümle okunuyor: 'Su, cesaret ve iyilik buluştuğunda kalp uyanacak.' Sayfaya küçük bir gümüş anahtar bağlanmış.",
+        "gives": "clue",
+        "choices": [C("Take the journal to the river spirit.", "Günlüğü nehir ruhuna götür.", "f_river"), C("Follow the map to the cave.", "Haritayı izleyerek mağaraya git.", "f_cave")],
+    },
+    "f_wall": {
+        "text": "You brush dust from the wall. The drawings show the dragon guarding the forest heart before the silver mist appeared. The broken chain was not a prison chain; it was part of an old protective spell. A line of tiny words glows beneath the picture: 'Kindness breaks the mist.' You now understand that the dragon may be a guardian, not a monster.",
+        "tr": "Duvardaki tozu siliyorsun. Çizimler, gümüş sis ortaya çıkmadan önce ejderhanın orman kalbini koruduğunu gösteriyor. Kırık zincir bir hapishane zinciri değil, eski bir koruma büyüsünün parçasıymış. Resmin altında küçük kelimeler parlıyor: 'İyilik sisi dağıtır.' Ejderhanın bir canavar değil, koruyucu olabileceğini anlıyorsun.",
+        "gives": "clue",
+        "choices": [C("Talk gently to the dragon.", "Ejderhayla nazikçe konuş.", "f_dragon"), C("Return to the river for help.", "Yardım için nehre dön.", "f_river")],
     },
     "f_end_hero": {
         "end": "hero", "title": "Kahraman son", "xp": 30,
@@ -386,9 +418,9 @@ ADVENTURE.update(FOREST)  # tüm sahneler tek sözlükte
 
 STORIES = {
     "passport": {"title": "Kayıp Pasaport", "emoji": "🧳", "start": "start", "ends": PASSPORT_END,
-                 "desc": "Londra'da pasaportunu kaybettin. Seçimler yap ve kelime sorularını çöz."},
+                 "desc": "Londra'da pasaportunu kaybettin. İpuçlarını topla, insanlarla konuş ve farklı sonlara ulaş. (Uzun hikâye)"},
     "forest": {"title": "Büyülü Orman", "emoji": "🐉", "start": "f_start", "ends": FOREST_END,
-               "desc": "Fantastik bir dünyada büyücüsün. Engelleri İngilizce cümleleri sesli söyleyerek aş."},
+               "desc": "Gümüş sisin sırrını çöz, nehir ruhuyla ve ejderhayla konuş. İngilizce büyülerle ormanı kurtar. (Uzun fantastik hikâye)"},
 }
 ENDINGS = {**PASSPORT_END, **FOREST_END}
 
