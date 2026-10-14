@@ -517,7 +517,7 @@ def today():
 
 
 # ---------- Kalıcı ilerleme ----------
-PERSIST = ["xp", "learned", "spoken", "speaking_history", "srs", "daily", "streak", "endings"]
+PERSIST = ["xp", "learned", "spoken", "speaking_history", "srs", "daily", "streak", "endings", "treasure_hunt"]
 
 
 def load():
@@ -542,7 +542,8 @@ def initialise_state():
         st.session_state.xp = int(data.get("xp", 0) or 0)
         for key, default in [("learned", []), ("spoken", []), ("speaking_history", []),
                              ("srs", {}), ("daily", {"date": today(), "xp": 0}),
-                             ("streak", {"last": None, "count": 0}), ("endings", [])]:
+                             ("streak", {"last": None, "count": 0}), ("endings", []),
+                             ("treasure_hunt", {"room": "Beach", "found": [], "opened": [], "complete": False, "xp_claimed": False})]:
             st.session_state[key] = data.get(key, default)
     ses = {"page": "Bugün", "q": None, "round": {"n": 0, "score": 0}, "g": None,
            "s": None, "d": None, "nonce": 0, "rv_show": False, "adv": None}
@@ -550,7 +551,8 @@ def initialise_state():
         st.session_state.setdefault(key, default)
     for key, default in [("learned", []), ("spoken", []), ("speaking_history", []),
                          ("srs", {}), ("daily", {"date": today(), "xp": 0}),
-                         ("streak", {"last": None, "count": 0}), ("endings", [])]:
+                         ("streak", {"last": None, "count": 0}), ("endings", []),
+                         ("treasure_hunt", {"room": "Beach", "found": [], "opened": [], "complete": False, "xp_claimed": False})]:
         st.session_state.setdefault(key, default)
 
 
@@ -1109,10 +1111,68 @@ elif page == "Test":
 # ---------- OYUNLAR ----------
 elif page == "Oyunlar":
     st.title("Oyunlar")
-    game = st.radio("Oyun", ["Eşleştirme", "Cümle kurma", "Dinle ve yaz"], horizontal=True,
+    game = st.radio("Oyun", ["Eşleştirme", "Cümle kurma", "Dinle ve yaz", "Hazine Avı"], horizontal=True,
                     label_visibility="collapsed")
 
-    if game == "Eşleştirme":
+    if game == "Hazine Avı":
+        st.subheader("🏝️ Hazine Avı: Kayıp Ada")
+        st.write("Adayı keşfet, sandıkları bul ve basit İngilizce sorularını çöz. Her oda küçük bir keşif içerir.")
+        hunt = st.session_state.treasure_hunt
+        rooms = {
+            "Beach": {"emoji": "🏖️", "tr": "Sahil", "clue": "Look under the sand.", "q": "What is this? 🍎", "opts": ["Apple", "Book", "Door"], "answer": "Apple", "word": "apple", "meaning": "elma"},
+            "Forest": {"emoji": "🌳", "tr": "Orman", "clue": "The trees are green.", "q": "What color are the trees?", "opts": ["Blue", "Green", "Red"], "answer": "Green", "word": "green", "meaning": "yeşil"},
+            "Cave": {"emoji": "🪨", "tr": "Mağara", "clue": "It is dark inside.", "q": "Choose the opposite of 'hot'.", "opts": ["Cold", "Big", "Fast"], "answer": "Cold", "word": "cold", "meaning": "soğuk"},
+            "Lake": {"emoji": "💧", "tr": "Göl", "clue": "The water is clear.", "q": "I can ___ in water.", "opts": ["swim", "read", "sleeping"], "answer": "swim", "word": "swim", "meaning": "yüzmek"},
+            "Temple": {"emoji": "🏛️", "tr": "Tapınak", "clue": "The treasure is near!", "q": "What do you use to open a door?", "opts": ["A key", "A cloud", "A fish"], "answer": "A key", "word": "key", "meaning": "anahtar"},
+        }
+        unlocked = {"Beach": True, "Forest": "Beach" in hunt["opened"], "Cave": "Forest" in hunt["opened"], "Lake": "Cave" in hunt["opened"], "Temple": "Lake" in hunt["opened"]}
+        st.caption(f"Bölüm: {len(hunt['opened'])}/5 · Bulunan kelime: {len(hunt['found'])}/5")
+        map_cols = st.columns(5)
+        for col, (room_name, room) in zip(map_cols, rooms.items()):
+            disabled = not unlocked[room_name]
+            label = ("✅ " if room_name in hunt["opened"] else room["emoji"] + " ") + room["tr"]
+            if col.button(label, key=f"hunt_room_{room_name}", disabled=disabled, use_container_width=True):
+                hunt["room"] = room_name
+                save()
+                st.rerun()
+        current = hunt.get("room", "Beach")
+        if current not in rooms or not unlocked.get(current, False):
+            current = "Beach"
+            hunt["room"] = current
+        room = rooms[current]
+        st.markdown(f"### {room['emoji']} {room['tr']} / {current}")
+        st.info(f"**İpucu:** {room['clue']}  \n\nTürkçesi: { {'Beach':'Kumun altına bak.','Forest':'Ağaçlar yeşildir.','Cave':'İçerisi karanlık.','Lake':'Su berrak.','Temple':'Hazine çok yakın!'}[current] }")
+        if current in hunt["opened"]:
+            st.success("Bu bölümü zaten keşfettin. Haritadan başka bir yere gidebilirsin.")
+            st.write(f"Kelime: **{room['word']}** — {room['meaning']}")
+        else:
+            st.write("🧰 **Sandık bulundu!** Açmak için İngilizce soruyu cevapla.")
+            pick = st.radio(room["q"], room["opts"], index=None, key=f"hunt_pick_{current}")
+            if st.button("Sandığı aç", type="primary", key=f"hunt_open_{current}", disabled=pick is None):
+                if pick == room["answer"]:
+                    hunt["opened"].append(current)
+                    if room["word"] not in hunt["found"]:
+                        hunt["found"].append(room["word"])
+                    # Kelimeyi görmek/toplamak XP vermez; yalnızca ilk doğru çözüm küçük oyun ödülü verir.
+                    if current not in hunt.get("xp_rooms", []):
+                        hunt.setdefault("xp_rooms", []).append(current)
+                        award(3)
+                    if len(hunt["opened"]) == len(rooms):
+                        hunt["complete"] = True
+                    save()
+                    st.success(f"Doğru! {room['word']} = {room['meaning']}. +3 XP")
+                    st.rerun()
+                else:
+                    st.error("Henüz olmadı. İngilizce ipucunu tekrar oku ve yeniden dene!")
+        if hunt.get("complete"):
+            st.balloons()
+            st.success("🏆 Hazineyi buldun! Harika iş çıkardın.")
+            if st.button("Hazine Avı'nı yeniden başlat", key="hunt_reset"):
+                st.session_state.treasure_hunt = {"room": "Beach", "found": [], "opened": [], "complete": False, "xp_claimed": False, "xp_rooms": []}
+                save()
+                st.rerun()
+
+    elif game == "Eşleştirme":
         g = st.session_state.g
         if g is None:
             st.caption("Beş kelimeyi doğru anlamlarıyla eşleştir.")
@@ -1451,7 +1511,7 @@ elif page == "Macera":
                     c1.markdown(f"**{en}** — {BY_EN[en]['tr']}")
                     if en in st.session_state.learned:
                         c2.caption("Defterinde")
-                    elif c2.button("Ekle (+10 XP)", key=f"adv_add_{en}_{a['steps']}"):
+                    elif c2.button("Defterime ekle", key=f"adv_add_{en}_{a['steps']}"):
                         add_learned(en)
                         st.rerun()
 
