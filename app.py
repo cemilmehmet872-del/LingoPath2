@@ -747,10 +747,15 @@ def pron_hint(diffs):
 
 
 def adv_enter(nid):
-    """Sahneye geç: eşya ver, soru seçeneklerini hazırla, sonda XP ver."""
+    """Sahneye geç: eşya ver, haritaya kaydet, soru seçeneklerini hazırla."""
     a = st.session_state.adv
     node = ADVENTURE[nid]
     a["node"] = nid
+    a.setdefault("visited", [])
+    a.setdefault("map_labels", {})
+    if nid not in a["visited"]:
+        a["visited"].append(nid)
+    a["map_labels"].setdefault(nid, node.get("title", nid.replace("_", " ").title()))
     a["steps"] += 1
     a["opts"] = None
     a["tries"] = 0
@@ -766,13 +771,34 @@ def adv_enter(nid):
         a["bonus"] = 3 * len(a["items"])
         if node["end"] not in st.session_state.endings:
             st.session_state.endings.append(node["end"])
-        award(node["xp"] + a["bonus"])
+            award(node["xp"] + a["bonus"])
 
 
 def adv_start(story_id):
-    st.session_state.adv = {"story": story_id, "node": STORIES[story_id]["start"], "items": [],
+    start = STORIES[story_id]["start"]
+    st.session_state.adv = {"story": story_id, "node": start, "items": [],
                             "passed": [], "opts": None, "pick_id": new_nonce(), "steps": 0,
-                            "tries": 0, "fail": None, "flash": None, "bonus": 0}
+                            "tries": 0, "fail": None, "flash": None, "bonus": 0,
+                            "visited": [], "map_labels": {start: "Başlangıç"}}
+    adv_enter(start)
+
+
+def choice_icon(label):
+    """Tıklanabilir macera nesneleri için metne uygun basit simge seç."""
+    t = label.lower()
+    for words, emoji in [
+        (("door", "kapı", "open"), "🚪"), (("map", "harita", "direction", "directions"), "🗺️"),
+        (("book", "kitap", "read", "library"), "📚"), (("key", "anahtar", "lock"), "🗝️"),
+        (("ask", "talk", "sor", "konuş", "officer", "conductor", "waiter"), "💬"),
+        (("look", "search", "check", "ara", "incele", "explore"), "🔎"),
+        (("walk", "follow", "go", "return", "git", "yürü", "follow"), "👣"),
+        (("light", "lantern", "fener", "candle"), "🕯️"), (("train", "tren", "carriage", "vagon"), "🚂"),
+        (("water", "river", "nehir", "sea", "deniz"), "🌊"), (("wait", "bekle", "sit", "otur"), "⏳"),
+        (("take", "al", "keep", "tut"), "🎒"), (("dragon", "ejderha", "forest", "orman"), "🐉"),
+    ]:
+        if any(word in t for word in words):
+            return emoji
+    return "✨"
 
 
 def speak_attempt(nid, node, heard, typed=False):
@@ -1375,7 +1401,19 @@ elif page == "Macera":
         st.title(f"{story['emoji']} {story['title']}")
 
         top1, top2 = st.columns([3, 1])
-        top1.caption(f"Bölüm {a['steps']} · Sonlar: {sum(k in found for k in story['ends'])}/{len(story['ends'])}")
+        top1.caption(f"Bölüm {a['steps']} · Keşfedilen yer: {len(a.get('visited', []))} · Sonlar: {sum(k in found for k in story['ends'])}/{len(story['ends'])}")
+        with st.expander("🗺️ Keşif haritam", expanded=False):
+            st.caption("Daha önce ziyaret ettiğin sahnelere geri dönebilirsin. Bitmiş sonlar haritadan tekrar açılamaz.")
+            map_nodes = [n for n in a.get("visited", []) if n != nid and "end" not in ADVENTURE.get(n, {})]
+            if map_nodes:
+                map_cols = st.columns(2)
+                for idx, map_nid in enumerate(map_nodes[-8:]):
+                    map_label = a.get("map_labels", {}).get(map_nid, map_nid.replace("_", " ").title())
+                    if map_cols[idx % 2].button(f"📍 {map_label}", key=f"adv_map_{a['pick_id']}_{map_nid}", use_container_width=True):
+                        adv_enter(map_nid)
+                        st.rerun()
+            else:
+                st.info("Haritanda henüz geri dönebileceğin başka bir yer yok. Bir seçeneğe tıklayarak keşfe başla.")
         with st.expander(f"🎒 Envanter ({len(a['items'])} eşya)", expanded=bool(a["items"])):
             if a["items"]:
                 for item_id in a["items"]:
@@ -1488,13 +1526,23 @@ elif page == "Macera":
                     st.rerun()
 
         else:
-            for i, c in enumerate(node["choices"]):
-                if c["needs"] and c["needs"] not in a["items"]:
-                    continue
-                label = c["en"] + (f"  ({ADV_ITEMS[c['needs']]})" if c["needs"] else "")
-                if st.button(label, key=f"adv_c_{a['steps']}_{i}", help=c["tr"], use_container_width=True):
-                    adv_enter(c["to"])
-                    st.rerun()
+            st.markdown("#### 👆 Sahnedeki yerlere ve nesnelere tıkla")
+            st.caption("Her seçenek yeni bir olay, ipucu veya bölge açabilir.")
+            available_choices = [c for c in node["choices"] if not c["needs"] or c["needs"] in a["items"]]
+            for row_start in range(0, len(available_choices), 2):
+                cols = st.columns(2)
+                for offset, c in enumerate(available_choices[row_start:row_start + 2]):
+                    i = row_start + offset
+                    label = c["en"] + (f"  ({ADV_ITEMS[c['needs']]})" if c["needs"] else "")
+                    with cols[offset]:
+                        with st.container(border=True):
+                            st.markdown(f"<div style='font-size:2rem'>{choice_icon(c['en'] + ' ' + c['tr'])}</div>", unsafe_allow_html=True)
+                            st.markdown(f"**{c['en']}**")
+                            st.caption(c["tr"])
+                            if st.button("Burayı araştır →", key=f"adv_c_{a['steps']}_{i}", help=c["tr"], use_container_width=True):
+                                a.setdefault("map_labels", {})[c["to"]] = c["tr"]
+                                adv_enter(c["to"])
+                                st.rerun()
 
 
 # ---------- DEFTERİM ----------
