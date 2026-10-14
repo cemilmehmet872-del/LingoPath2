@@ -682,22 +682,45 @@ SPEAK_PASS = 0.70  # bu benzerliğin üstünde kapı açılır
 
 
 def transcribe(data):
+    """WAV kaydını birkaç İngilizce tanıma ayarıyla çözmeyi dener."""
     import speech_recognition as sr
+
     recognizer = sr.Recognizer()
+    recognizer.dynamic_energy_threshold = True
+    recognizer.pause_threshold = 0.8
     with sr.AudioFile(BytesIO(data)) as source:
         recorded = recognizer.record(source)
-    return recognizer.recognize_google(recorded, language="en-US")
+
+    # Farklı İngilizce varyantları bazen farklı sonuç verebilir.
+    last_error = None
+    for language in ("en-US", "en-GB"):
+        try:
+            text = recognizer.recognize_google(recorded, language=language).strip()
+            if text:
+                return text
+        except sr.UnknownValueError as error:
+            last_error = error
+        except sr.RequestError:
+            # Servis/bağlantı hatasında diğer dil ayarı da aynı servisi kullanacağı için dur.
+            raise
+    if last_error:
+        raise last_error
+    raise sr.UnknownValueError()
 
 
 def stt_error(error):
     if isinstance(error, ImportError):
-        return "Paket eksik: python -m pip install SpeechRecognition"
+        return "Ses tanıma paketi eksik. Terminalde: python -m pip install SpeechRecognition"
     name = type(error).__name__
     if "UnknownValue" in name:
-        return "Ses net anlaşılamadı. Daha sessiz bir ortamda, biraz daha yavaş tekrar dene."
+        return ("Kayıttaki sözler çözümlenemedi. Mikrofonu ağzına biraz yaklaştır, "
+                "örnek cümleyi dinle ve daha yavaş, tam cümle hâlinde tekrar kaydet. "
+                "İstersen aşağıdaki yazıyla kontrol seçeneğini kullan.")
     if "RequestError" in name:
-        return "Tanıma servisine ulaşılamadı. İnternet bağlantını kontrol et ya da yazarak dene."
-    return "Ses çözümlenemedi. Mikrofon iznini ve kaydı kontrol et."
+        return "Google ses tanıma servisine ulaşılamadı. İnternet bağlantısını kontrol et veya aşağıdaki yazıyla kontrol seçeneğini kullan."
+    if "AudioData" in name or "AudioFile" in name or "ValueError" in name:
+        return "Ses dosyası okunamadı. Kaydı yeniden başlatıp tekrar dene."
+    return "Ses çözümlenemedi. Mikrofon iznini kontrol edip yeniden kayıt yapmayı dene."
 
 
 def pron_hint(diffs):
@@ -953,12 +976,8 @@ elif page == "Konuşma":
         st.audio(audio, format="audio/wav")
         if st.button("Kaydımı kontrol et", type="primary", use_container_width=True):
             try:
-                import speech_recognition as sr
-                recognizer = sr.Recognizer()
-                with sr.AudioFile(BytesIO(audio.getvalue())) as source:
-                    recorded = recognizer.record(source)
                 with st.spinner("Söylediklerin yazıya çevriliyor…"):
-                    heard = recognizer.recognize_google(recorded, language="en-US")
+                    heard = transcribe(audio.getvalue())
 
                 ratio, diffs = make_speech_result(target, heard)
                 exact = norm(target) == norm(heard)
@@ -992,16 +1011,31 @@ elif page == "Konuşma":
             except ImportError:
                 st.error("Paket eksik: python -m pip install SpeechRecognition")
             except Exception as error:
-                name = type(error).__name__
-                if "UnknownValue" in name:
-                    st.error("Ses net anlaşılamadı. Daha sessiz bir ortamda tekrar dene.")
-                elif "RequestError" in name:
-                    st.error("Tanıma servisine ulaşılamadı. İnternet bağlantını kontrol et.")
-                else:
-                    st.error("Ses çözümlenemedi. Mikrofon iznini ve kaydı kontrol et.")
-                    st.caption(f"Ayrıntı: {error}")
+                st.error(stt_error(error))
+                if type(error).__name__ not in ("UnknownValueError", "RequestError", "ImportError"):
+                    st.caption(f"Teknik ayrıntı: {error}")
 
-    st.caption("Gizlilik: Ses kaydı, yazıya çevrilmek için Google'ın çevrim içi servisine gönderilir.")
+    st.markdown("#### 3. Mikrofon çalışmazsa yazıyla kontrol et")
+    st.caption("Bu seçenek mikrofon yerine yazdığın cümleyi karşılaştırır; konuşma XP'si vermez.")
+    typed_speech = st.text_input(
+        "İngilizce cümleyi buraya yaz", key=f"typed_speech_{target}",
+        placeholder="Örnek: I like learning English."
+    )
+    if st.button("Yazdığım cümleyi kontrol et", key=f"typed_check_{target}",
+                 disabled=not typed_speech.strip(), use_container_width=True):
+        ratio, diffs = make_speech_result(target, typed_speech)
+        st.markdown(f"**Beklenen:** {target}")
+        st.markdown(f"**Yazdığın:** {typed_speech.strip()}")
+        st.progress(ratio)
+        st.caption(f"Metin benzerliği: %{round(ratio * 100)}. Bu bir telaffuz puanı değildir.")
+        if norm(target) == norm(typed_speech):
+            st.success("Cümleyi doğru yazdın!")
+        else:
+            st.info("Farklı olan kelimeleri aşağıda görebilirsin:")
+            for d in diffs:
+                st.write(f"Beklenen: **{d['expected']}** → Yazdığın: **{d['heard']}**")
+
+    st.caption("Gizlilik: Mikrofon kaydı yazıya çevrilmek için Google'ın çevrim içi servisine gönderilir. Yazıyla kontrol seçeneği ses kaydı göndermez.")
 
 
 # ---------- TEST ----------
