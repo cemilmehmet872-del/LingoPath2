@@ -13,7 +13,7 @@ try:
 except ImportError:
     sort_items = None
 
-st.set_page_config(page_title="LingoPath", page_icon="✏️", layout="centered")
+st.set_page_config(page_title="LingoPath", page_icon="✏️", layout="wide")
 
 SAVE = Path("lingopath_progress.json")
 DAILY_GOAL = 30  # günlük XP hedefi
@@ -416,13 +416,65 @@ FOREST = {
 FOREST_END = {n["end"]: n["title"] for n in FOREST.values() if "end" in n}
 ADVENTURE.update(FOREST)  # tüm sahneler tek sözlükte
 
+# ---------- Yeni maceralar ----------
+NIGHT_TRAIN = {
+    "nt_start": {"text": "The last train leaves at midnight. You board the old night train, but the carriage is empty except for a silver suitcase and a ticket with your name on it. The lights flicker. A conductor appears and whispers, 'Your stop is not on any map.'", "tr": "Gece yarısı trenine biniyorsun. Vagon boş; gümüş bir bavul ve üzerinde adının yazdığı bir bilet var. Kondüktör, 'Durağın hiçbir haritada yok,' diye fısıldıyor.", "choices": [C("Open the silver suitcase.", "Gümüş bavulu aç.", "nt_case"), C("Ask the conductor about the ticket.", "Kondüktöre bileti sor.", "nt_conductor")]},
+    "nt_case": {"text": "Inside the suitcase lies an old photograph, a brass key, and a note: 'When the train stops, do not follow the lights.' Outside the window, tiny blue lights begin to move beside the tracks.", "tr": "Bavulda eski bir fotoğraf, pirinç bir anahtar ve 'Tren durunca ışıkları takip etme' yazan bir not var. Pencerenin dışında mavi ışıklar rayların yanında ilerliyor.", "gives": "clue", "choices": [C("Keep the note and stay on the train.", "Notu al ve trende kal.", "nt_safe"), C("Follow the blue lights.", "Mavi ışıkları takip et.", "nt_lights")]},
+    "nt_conductor": {"text": "The conductor studies your ticket. 'Someone has been waiting for you for a hundred years,' he says. He points to a door at the end of the carriage. Behind it, you hear the sound of waves, though the train is far from the sea.", "tr": "Kondüktör biletine bakıyor. 'Biri seni yüz yıldır bekliyor,' diyor. Vagonun sonundaki kapıyı gösteriyor. Kapının arkasından, denizden çok uzakta olmanıza rağmen dalga sesi geliyor.", "choices": [C("Open the mysterious door.", "Gizemli kapıyı aç.", "nt_lights"), C("Return to your seat.", "Koltuğuna dön.", "nt_safe")]},
+    "nt_lights": {"text": "You step into a moonlit station covered in ivy. A shadow waits beneath the clock. It looks like you, but older. 'You can stay and learn the truth,' it says, 'or return before the doors close.'", "tr": "Ay ışığındaki sarmaşıklarla kaplı istasyona adım atıyorsun. Saatin altında sana benzeyen yaşlı bir gölge bekliyor. 'Gerçeği öğrenebilir ya da kapılar kapanmadan dönebilirsin,' diyor.", "choices": [C("Stay and hear the truth.", "Kal ve gerçeği öğren.", "nt_truth"), C("Run back to the train.", "Trene geri koş.", "nt_safe")]},
+    "nt_truth": {"end": "nt_truth", "title": "Zamanın sırrı", "xp": 25, "text": "The shadow gives you the key. The clock begins to move backwards, and you see memories of choices you have not made yet. When you return to the train, sunrise is waiting beyond the window.", "tr": "Gölge sana anahtarı veriyor. Saat geriye doğru çalışmaya başlıyor ve henüz yapmadığın seçimlerin anılarını görüyorsun. Trene döndüğünde pencerenin ardında güneş doğuyor."},
+    "nt_safe": {"end": "nt_safe", "title": "Güvenli dönüş", "xp": 12, "text": "You stay on the train. At dawn, it arrives at a familiar station. The strange ticket has vanished, but the photograph remains in your pocket—a mystery for another night.", "tr": "Trende kalıyorsun. Şafakta tanıdık bir istasyona varıyorsun. Garip bilet kaybolmuş, ama fotoğraf cebinde duruyor. Bu gizem başka bir geceye kalıyor."},
+}
+LIBRARY = {
+    "lib_start": {"text": "During a storm, you discover a narrow door behind a bookshelf in the town library. It opens into a staircase descending underground. A lantern glows below, and somewhere in the dark a page turns by itself.", "tr": "Fırtınalı bir gecede kütüphanede kitaplığın arkasında dar bir kapı buluyorsun. Kapı yer altına inen bir merdivene açılıyor. Aşağıda bir fener yanıyor ve karanlıkta bir sayfa kendi kendine çevriliyor.", "choices": [C("Go down the stairs.", "Merdivenlerden aşağı in.", "lib_hall"), C("Look for a clue in the bookshelf.", "Kitaplıkta ipucu ara.", "lib_clue")]},
+    "lib_clue": {"text": "One book is warm to the touch. Its title reads 'The Names We Forget'. Inside, a handwritten message says: 'Speak the name of what you seek, and the locked room will answer.'", "tr": "Bir kitap dokununca sıcak. Başlığında 'Unuttuğumuz İsimler' yazıyor. İçindeki el yazısı notta, 'Aradığın şeyin adını söyle, kilitli oda cevap verecek' deniyor.", "gives": "clue", "choices": [C("Go down with the message.", "Notla birlikte aşağı in.", "lib_hall")]},
+    "lib_hall": {"text": "At the bottom, thousands of books float in the air. A small door has no handle, only a blank nameplate. You remember the note and whisper, 'knowledge'. The nameplate glows, and the door slowly opens.", "tr": "Aşağıda binlerce kitap havada süzülüyor. Küçük kapıda kol yok; yalnızca boş bir isimlik var. Notu hatırlayıp 'knowledge' diye fısıldıyorsun. İsimlik parlıyor ve kapı yavaşça açılıyor.", "quiz": "knowledge", "ok": "lib_secret", "bad": "lib_bad"},
+    "lib_bad": {"text": "The door remains shut. The floating books rearrange themselves, almost as if they are trying to help you remember the word.", "tr": "Kapı açılmıyor. Havada süzülen kitaplar, kelimeyi hatırlamana yardım eder gibi yeniden diziliyor.", "choices": [C("Try the word again.", "Kelimeyi tekrar dene.", "lib_hall")]},
+    "lib_secret": {"end": "lib_secret", "title": "Kayıp arşiv", "xp": 25, "text": "Behind the door is a secret archive containing letters from people who lived centuries ago. One letter is addressed to you. It says that the library chooses curious readers to protect its stories. You take the letter upstairs, knowing the adventure has only begun.", "tr": "Kapının ardında yüzyıllar önce yaşamış insanlardan mektuplarla dolu gizli bir arşiv var. Bir mektup sana hitap ediyor. Kütüphanenin hikâyelerini korumak için meraklı okurları seçtiğini söylüyor. Maceranın yeni başladığını bilerek mektupla yukarı çıkıyorsun."},
+}
+LIGHTHOUSE = {
+    "lh_start": {"text": "A storm has pushed your small boat toward a lonely island. At the top of a cliff, an abandoned lighthouse flashes once, then goes dark. You find wet footprints leading to its door and hear a bell ringing inside, even though the building looks empty.", "tr": "Fırtına küçük tekneni yalnız bir adaya sürükledi. Uçurumun tepesindeki terk edilmiş deniz feneri bir kez yanıp söndü ve karardı. Kapıya giden ıslak ayak izleri buluyorsun. İçeriden, bina boş görünmesine rağmen bir zil sesi geliyor.", "choices": [C("Enter the lighthouse.", "Deniz fenerine gir.", "lh_inside"), C("Follow the footprints around the cliff.", "Ayak izlerini uçurumun çevresinden takip et.", "lh_path")]},
+    "lh_inside": {"text": "Dust covers the stairs, but one lantern is still warm. On a desk you find a logbook. The last entry says: 'The light must guide the lost ship home before sunrise.' Through the window, you see a tiny ship struggling against the waves.", "tr": "Merdivenler tozla kaplı ama bir fener hâlâ sıcak. Masada bir kayıt defteri buluyorsun. Son notta, 'Gün doğmadan ışık kayıp gemiye eve dönüş yolunu göstermeli' yazıyor. Pencereden dalgalarla boğuşan küçük bir gemi görüyorsun.", "gives": "clue", "choices": [C("Repair the lamp with the tools nearby.", "Yakındaki aletlerle lambayı tamir et.", "lh_repair"), C("Ring the old bell for help.", "Yardım için eski zili çal.", "lh_bell")]},
+    "lh_path": {"text": "The footprints end at a narrow cave. Inside, a brass key rests beside a message in a bottle: 'The keeper is still watching.' You hear the lighthouse bell again, louder this time.", "tr": "Ayak izleri dar bir mağarada bitiyor. İçeride bir şişedeki mesajın yanında pirinç bir anahtar var: 'Fener bekçisi hâlâ izliyor.' Deniz fenerinin zili yeniden, bu kez daha yüksek sesle çalıyor.", "gives": "clue", "choices": [C("Return to the lighthouse.", "Deniz fenerine dön.", "lh_inside"), C("Wait in the cave until morning.", "Sabaha kadar mağarada bekle.", "lh_safe")]},
+    "lh_repair": {"text": "You carefully clean the glass and turn the old wheel. The beam cuts through the storm. The distant ship answers with three flashes and changes course toward the island's safe harbor.", "tr": "Camı dikkatlice temizleyip eski çarkı çeviriyorsun. Işık fırtınayı yarıyor. Uzaktaki gemi üç ışıkla cevap veriyor ve adanın güvenli limanına yöneliyor.", "choices": [C("Keep the light shining until dawn.", "Gün doğana kadar ışığı açık tut.", "lh_good"), C("Search the keeper's room.", "Bekçinin odasını ara.", "lh_secret")]},
+    "lh_bell": {"text": "The bell echoes over the sea. A ghostly keeper appears at the top of the stairs. 'You heard the call,' she says. 'Now choose: save the ship, or learn why I never left.'", "tr": "Zil sesi denizde yankılanıyor. Merdivenlerin tepesinde hayalet bir bekçi beliriyor. 'Çağrıyı duydun,' diyor. 'Şimdi seç: gemiyi kurtar ya da neden hiç ayrılmadığımı öğren.'", "choices": [C("Save the ship first.", "Önce gemiyi kurtar.", "lh_good"), C("Ask about the keeper's secret.", "Bekçinin sırrını sor.", "lh_secret")]},
+    "lh_good": {"end": "lh_good", "title": "Fırtınadan kurtuluş", "xp": 22, "text": "The ship reaches the harbor just before sunrise. The keeper smiles and fades into the golden light. The lighthouse shines again, and the island no longer feels lonely.", "tr": "Gemi gün doğmadan hemen önce limana ulaşıyor. Bekçi gülümsüyor ve altın ışıkların içinde kayboluyor. Deniz feneri yeniden parlıyor; ada artık yalnız hissettirmiyor."},
+    "lh_secret": {"end": "lh_secret", "title": "Bekçinin sırrı", "xp": 28, "text": "The keeper tells you she has guarded the island for a hundred years, waiting for someone brave enough to answer the bell. She gives you the lighthouse key and vanishes as the storm clears.", "tr": "Bekçi, zile cevap verecek kadar cesur birini bekleyerek yüz yıldır adayı koruduğunu anlatıyor. Sana deniz fenerinin anahtarını veriyor ve fırtına dindiğinde ortadan kayboluyor."},
+    "lh_safe": {"end": "lh_safe", "title": "Güvenli sabah", "xp": 10, "text": "You stay in the cave until the storm passes. At dawn, a rescue boat finds you. The lighthouse is dark again, but you keep the strange message as a reminder of the island.", "tr": "Fırtına geçene kadar mağarada kalıyorsun. Gün doğarken bir kurtarma teknesi seni buluyor. Deniz feneri yeniden karanlık, ama adayı hatırlamak için gizemli mesajı saklıyorsun."},
+}
+LOST_CITY = {
+    "city_start": {"text": "While hiking through a desert, you discover a stone arch half-buried in the sand. Beyond it lies a city that does not appear on any map. Blue symbols glow on the walls, and a dry fountain begins to flow when you step closer.", "tr": "Çölde yürürken kuma yarı gömülmüş taş bir kemer keşfediyorsun. Ötesinde hiçbir haritada görünmeyen bir şehir var. Duvarlarda mavi semboller parlıyor ve yaklaştığında kuru bir çeşme akmaya başlıyor.", "choices": [C("Study the glowing symbols.", "Parlayan sembolleri incele.", "city_symbols"), C("Follow the water toward the palace.", "Suyu saraya doğru takip et.", "city_palace")]},
+    "city_symbols": {"text": "The symbols form a warning: 'Only a truthful traveler may enter.' A stone door opens just enough to reveal a small mirror and a silver coin.", "tr": "Semboller bir uyarı oluşturuyor: 'Yalnızca dürüst bir yolcu içeri girebilir.' Taş kapı aralanıyor; içeride küçük bir ayna ve gümüş bir madeni para var.", "gives": "clue", "choices": [C("Take the mirror and enter.", "Aynayı al ve içeri gir.", "city_trial"), C("Leave everything and go to the palace.", "Her şeyi bırakıp saraya git.", "city_palace")]},
+    "city_palace": {"text": "At the palace, a stone guardian blocks the entrance. 'What do you bring that cannot be stolen?' it asks. You remember that the city seems to react to every honest choice.", "tr": "Sarayda taş bir muhafız girişi kapatıyor. 'Çalınamayacak ne getirdin?' diye soruyor. Şehrin her dürüst seçime tepki verdiğini hatırlıyorsun.", "choices": [C("Answer: my memories.", "'Anılarımı' diye cevap ver.", "city_good"), C("Offer the silver coin.", "Gümüş parayı teklif et.", "city_trial")]},
+    "city_trial": {"text": "The mirror shows a memory you had forgotten: someone once helped you when you were lost. The guardian lowers its head. 'Remember kindness, and the city will remember you.'", "tr": "Ayna unuttuğun bir anıyı gösteriyor: Kaybolduğunda biri sana yardım etmişti. Muhafız başını eğiyor. 'İyiliği hatırla, şehir de seni hatırlasın.'", "choices": [C("Promise to protect the city.", "Şehri koruyacağına söz ver.", "city_good"), C("Take a treasure and leave quickly.", "Bir hazine alıp hızla ayrıl.", "city_bad")]},
+    "city_good": {"end": "city_good", "title": "Şehrin koruyucusu", "xp": 26, "text": "The blue symbols brighten. The guardian gives you a small crystal that can guide lost travelers. The hidden city welcomes you as its new friend, and the desert path home appears beneath the stars.", "tr": "Mavi semboller parlıyor. Muhafız sana kaybolan yolculara rehberlik eden küçük bir kristal veriyor. Gizli şehir seni yeni dostu olarak kabul ediyor ve yıldızların altında eve giden yol beliriyor."},
+    "city_bad": {"end": "city_bad", "title": "Kumların sırrı", "xp": 8, "text": "The treasure turns to sand in your hands. The city closes its gates, but you escape before the desert swallows the path. You leave with a lesson instead of gold.", "tr": "Hazine ellerinde kuma dönüşüyor. Şehir kapılarını kapatıyor ama çöl yolu yutmadan kaçıyorsun. Altın yerine bir dersle ayrılıyorsun."},
+}
+ADVENTURE.update(LIGHTHOUSE)
+ADVENTURE.update(LOST_CITY)
+LIGHTHOUSE_END = {n["end"]: n["title"] for n in LIGHTHOUSE.values() if "end" in n}
+CITY_END = {n["end"]: n["title"] for n in LOST_CITY.values() if "end" in n}
+
+ADVENTURE.update(NIGHT_TRAIN)
+ADVENTURE.update(LIBRARY)
+NIGHT_END = {n["end"]: n["title"] for n in NIGHT_TRAIN.values() if "end" in n}
+LIBRARY_END = {n["end"]: n["title"] for n in LIBRARY.values() if "end" in n}
+
 STORIES = {
     "passport": {"title": "Kayıp Pasaport", "emoji": "🧳", "start": "start", "ends": PASSPORT_END,
-                 "desc": "Londra'da pasaportunu kaybettin. İpuçlarını topla, insanlarla konuş ve farklı sonlara ulaş. (Uzun hikâye)"},
+                 "desc": "Londra'da pasaportunu kaybettin. İpuçlarını topla, insanlarla konuş ve farklı sonlara ulaş.", "image": "kayip_pasaport.png"},
     "forest": {"title": "Büyülü Orman", "emoji": "🐉", "start": "f_start", "ends": FOREST_END,
-               "desc": "Gümüş sisin sırrını çöz, nehir ruhuyla ve ejderhayla konuş. İngilizce büyülerle ormanı kurtar. (Uzun fantastik hikâye)"},
+               "desc": "Gümüş sisin sırrını çöz, nehir ruhuyla ve ejderhayla konuş. İngilizce büyülerle ormanı kurtar.", "image": "buyulu_orman.png"},
+    "night_train": {"title": "Gece Treni", "emoji": "🚂", "start": "nt_start", "ends": NIGHT_END,
+                    "desc": "Gece yarısı giden trende zamanın sırrını çöz."},
+    "library": {"title": "Unutulmuş Kütüphane", "emoji": "📚", "start": "lib_start", "ends": LIBRARY_END,
+                "desc": "Gizli bir arşivi keşfet ve kayıp hikâyeleri bul."},
+    "lighthouse": {"title": "Fırtınalı Deniz Feneri", "emoji": "🌊", "start": "lh_start", "ends": LIGHTHOUSE_END,
+                   "desc": "Issız bir adada fırtınaya yakalan. Gizemli bekçiyi bul ve kayıp gemiyi kurtar."},
+    "lost_city": {"title": "Kayıp Şehir", "emoji": "🏜️", "start": "city_start", "ends": CITY_END,
+                  "desc": "Çölde haritalarda olmayan bir şehir keşfet. Dürüst seçimlerin gizli kapıları açacak."},
 }
-ENDINGS = {**PASSPORT_END, **FOREST_END}
+ENDINGS = {**PASSPORT_END, **FOREST_END, **NIGHT_END, **LIBRARY_END, **LIGHTHOUSE_END, **CITY_END}
 
 
 def today():
@@ -686,36 +738,36 @@ def speak_attempt(nid, node, heard, typed=False):
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Young+Serif&family=Instrument+Sans:wght@400;500;600&family=Caveat:wght@600&display=swap');
-:root { --ink:#1d2b4f; --paper:#fbfbf7; --grid:#dfe6ef; --margin:#d9534f; --mark:#fff0a8; }
-.stApp { background-color: var(--paper);
-    background-image: linear-gradient(var(--grid) 1px, transparent 1px),
-                      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-size: 28px 28px; color: var(--ink); font-family: 'Instrument Sans', sans-serif; }
-.block-container { padding-top: 2.5rem; max-width: 760px; border-left: 2px solid var(--margin);
-    padding-left: 2.4rem !important; background: rgba(251,251,247,.9); }
-h1, h2, h3 { font-family: 'Young Serif', serif !important; color: var(--ink) !important;
-    font-weight: 400 !important; letter-spacing: 0; }
-h1 { font-size: 2.3rem !important; }
-p, li, label, span, div { font-family: 'Instrument Sans', sans-serif; }
-[data-testid="stSidebar"] { background: #eef1f6; border-right: 1px solid var(--grid); }
-[data-testid="stSidebar"] h1 { font-size: 1.6rem !important; }
-.word { font-family: 'Caveat', cursive; font-size: 3.8rem; line-height: 1.1; color: var(--ink);
-    display: inline-block; background: linear-gradient(transparent 58%, var(--mark) 58%);
-    padding: 0 .3rem; transform: rotate(-1deg); margin: .4rem 0 .6rem; }
-.sentence { font-family: 'Young Serif', serif; font-size: 1.4rem; line-height: 1.5; }
-.note { border-left: 3px solid var(--ink); padding: .1rem 0 .1rem .9rem; margin: .8rem 0; }
-.faint { color: #5b6786; font-size: .92rem; }
-.tally { font-family: 'Caveat', cursive; font-size: 2rem; letter-spacing: .15rem; color: var(--margin); }
-div.stButton > button { border-radius: 4px; border: 1.5px solid var(--ink); background: white;
-    color: var(--ink); font-weight: 500; box-shadow: 2px 2px 0 var(--ink); }
-div.stButton > button:hover { transform: translate(1px,1px); box-shadow: 1px 1px 0 var(--ink);
-    border-color: var(--ink); color: var(--ink); }
-div.stButton > button[kind="primary"] { background: var(--ink); color: white; }
-[data-testid="stMetric"] { background: rgba(255,255,255,.5); border: 0;
-    border-bottom: 1.5px solid var(--ink); border-radius: 0; padding: .3rem .2rem .5rem; }
-[data-testid="stProgressBar"] > div > div { background: var(--ink); }
-:focus-visible { outline: 2px solid var(--margin) !important; outline-offset: 2px; }
-div[data-testid="stAlert"] { border-radius: 4px; }
+:root { --ink:#1d2b4f; --paper:#fbfbf7; --grid:#dfe6ef; --margin:#d9534f; --mark:#fff0a8; --muted:#5b6786; --panel:rgba(251,251,247,.94); --button:#ffffff; }
+.stApp { background-color:var(--paper); background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:28px 28px; color:var(--ink); font-family:'Instrument Sans',sans-serif; }
+.block-container { padding-top:2rem; max-width:1180px; border-left:2px solid var(--margin); padding-left:2rem !important; background:var(--panel); }
+h1,h2,h3 { font-family:'Young Serif',serif !important; color:var(--ink) !important; font-weight:400 !important; }
+h1 { font-size:2.3rem !important; }
+p,li,label,span,div { font-family:'Instrument Sans',sans-serif; }
+[data-testid="stSidebar"] { background:#eef1f6; border-right:1px solid var(--grid); }
+[data-testid="stSidebar"] h1 { font-size:1.6rem !important; }
+.word { font-family:'Caveat',cursive; font-size:3.8rem; line-height:1.1; color:var(--ink); display:inline-block; background:linear-gradient(transparent 58%,var(--mark) 58%); padding:0 .3rem; margin:.4rem 0 .6rem; }
+.sentence { font-family:'Young Serif',serif; font-size:1.35rem; line-height:1.65; color:var(--ink) !important; }
+.note { border-left:3px solid var(--ink); padding:.1rem 0 .1rem .9rem; margin:.8rem 0; }
+.faint { color:var(--muted) !important; font-size:.92rem; }
+.tally { font-family:'Caveat',cursive; font-size:2rem; letter-spacing:.15rem; color:var(--margin); }
+div.stButton > button { border-radius:6px; border:1.5px solid var(--ink); background:var(--button); color:var(--ink); font-weight:600; box-shadow:2px 2px 0 var(--ink); }
+div.stButton > button:hover { border-color:var(--margin); color:var(--ink); }
+div.stButton > button[kind="primary"] { background:var(--ink); color:#fff; }
+[data-testid="stMetric"] { background:rgba(255,255,255,.55); color:var(--ink); border:0; border-bottom:1.5px solid var(--ink); padding:.5rem; }
+[data-testid="stProgressBar"] > div > div { background:var(--ink); }
+:focus-visible { outline:2px solid var(--margin) !important; outline-offset:2px; }
+div[data-testid="stAlert"] { border-radius:6px; }
+/* Streamlit koyu tema seçildiğinde metin ve kart kontrastını koru */
+html[data-theme="dark"], [data-theme="dark"] { --ink:#f0eee8; --paper:#151922; --grid:#252c39; --margin:#e58b82; --mark:#51452a; --muted:#c1c8d6; --panel:rgba(21,25,34,.96); --button:#252c39; }
+html[data-theme="dark"] .stApp, [data-theme="dark"] .stApp { background-color:var(--paper) !important; color:var(--ink) !important; }
+html[data-theme="dark"] .block-container, [data-theme="dark"] .block-container { background:var(--panel) !important; }
+html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] p,html[data-theme="dark"] li,html[data-theme="dark"] label,html[data-theme="dark"] [data-testid="stMarkdownContainer"], [data-theme="dark"] h1,[data-theme="dark"] h2,[data-theme="dark"] h3,[data-theme="dark"] p,[data-theme="dark"] li,[data-theme="dark"] label,[data-theme="dark"] [data-testid="stMarkdownContainer"] { color:var(--ink); }
+html[data-theme="dark"] [data-testid="stSidebar"], [data-theme="dark"] [data-testid="stSidebar"] { background:#1d2330 !important; }
+html[data-theme="dark"] div.stButton > button, [data-theme="dark"] div.stButton > button { background:var(--button); color:var(--ink); border-color:#64708a; }
+html[data-theme="dark"] div.stButton > button[kind="primary"], [data-theme="dark"] div.stButton > button[kind="primary"] { background:#d8dfef; color:#151922; }
+html[data-theme="dark"] [data-testid="stMetric"], [data-theme="dark"] [data-testid="stMetric"] { background:#202633; color:var(--ink); }
+html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] [data-baseweb="select"], [data-theme="dark"] input,[data-theme="dark"] textarea,[data-theme="dark"] [data-baseweb="select"] { color:var(--ink); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -1233,14 +1285,19 @@ elif page == "Macera":
         st.title("🗺️ Macera")
         st.write("İngilizce okuyarak ilerle. Bazı engelleri kelime sorularıyla, bazılarını da "
                  "cümleleri sesli söyleyerek aşarsın.")
+        asset_dir = Path(__file__).resolve().parent / "lingopath_assets"
         for sid, s in STORIES.items():
-            st.subheader(f"{s['emoji']} {s['title']}")
-            st.write(s["desc"])
-            st.caption("Sonlar: " + " · ".join(
-                (f"✅ {t}" if k in found else "▫️ ???") for k, t in s["ends"].items()))
-            if st.button("Başla", key=f"adv_start_{sid}", type="primary"):
-                adv_start(sid)
-                st.rerun()
+            with st.container(border=True):
+                image_path = asset_dir / s.get("image", "")
+                if image_path.is_file():
+                    st.image(str(image_path), use_container_width=True)
+                st.subheader(f"{s['emoji']} {s['title']}")
+                st.write(s["desc"])
+                st.caption("Sonlar: " + " · ".join(
+                    (f"✅ {t}" if k in found else "▫️ ???") for k, t in s["ends"].items()))
+                if st.button("Maceraya başla", key=f"adv_start_{sid}", type="primary", use_container_width=True):
+                    adv_start(sid)
+                    st.rerun()
     else:
         story = STORIES[a["story"]]
         nid = a["node"]
@@ -1259,6 +1316,10 @@ elif page == "Macera":
             (st.success if kind == "ok" else st.warning)(msg)
             a["flash"] = None
 
+        asset_dir = Path(__file__).resolve().parent / "lingopath_assets"
+        story_image = asset_dir / story.get("image", "")
+        if story_image.is_file():
+            st.image(str(story_image), use_container_width=True)
         st.markdown(f"<p class='sentence'>{node['text']}</p>", unsafe_allow_html=True)
 
         is_quiz, is_speak, is_end = "quiz" in node, "say" in node, "end" in node
