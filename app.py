@@ -595,10 +595,11 @@ def today_xp():
 
 
 def add_learned(en):
+    """Kelimeyi deftere ekle ve tekrar planını başlat; kelime eklemek XP vermez."""
     if en not in st.session_state.learned:
         st.session_state.learned.append(en)
         st.session_state.srs[en] = {"box": 1, "due": (date.today() + timedelta(days=1)).isoformat()}
-        award(10)
+        save()
 
 
 def due_words():
@@ -853,7 +854,7 @@ if page == "Bugün":
         st.markdown(f"<div class='word'>{word['en']}</div>", unsafe_allow_html=True)
         st.markdown(f"**{word['tr']}** — {word['example']}")
         speak(word["en"], key="today_audio")
-        if st.button("Defterime ekle (+10 XP)", type="primary"):
+        if st.button("Defterime ekle", type="primary"):
             add_learned(word["en"])
             st.rerun()
     else:
@@ -896,7 +897,7 @@ elif page == "Kelimeler":
             speak(word["example"], "🔊 Cümleyi dinle", key="s_audio")
         if word["en"] in st.session_state.learned:
             st.success("Bu kelime defterinde.")
-        elif st.button("Defterime ekle (+10 XP)", type="primary"):
+        elif st.button("Defterime ekle", type="primary"):
             add_learned(word["en"])
             st.rerun()
 
@@ -1464,26 +1465,49 @@ elif page == "Macera":
 
 # ---------- DEFTERİM ----------
 elif page == "Defterim":
-    st.title("Defterim")
+    st.title("📘 İngilizce Kelime Defterim")
+    st.write("Öğrendiğin kelimeleri, anlamlarını ve örnek cümlelerini gerçek bir defter gibi burada bulabilirsin.")
+
     learned = sorted(set(st.session_state.learned))
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("XP", st.session_state.xp)
-    c2.metric("Seviye", 1 + st.session_state.xp // 100)
-    c3.metric("Kelime", len(learned))
-    c4.metric("Seri", f"{streak_count()} gün")
-    st.caption(f"Sonraki seviyeye {100 - st.session_state.xp % 100} XP. "
-               f"Macerada bulunan son: {len(st.session_state.endings)}/{len(ENDINGS)}.")
+    c1, c2 = st.columns(2)
+    c1.metric("Defterdeki kelimeler", len(learned))
+    c2.metric("Tekrarı gelen kelimeler", len(due_words()))
+    st.caption("Kelimeyi deftere eklemek XP kazandırmaz.")
 
-    st.subheader("Öğrendiklerim")
-    if learned:
-        for en in learned:
-            if en in BY_EN:
-                box = st.session_state.srs.get(en, {}).get("box", 1)
-                st.markdown(f"**{en}** — {BY_EN[en]['tr']} <span class='faint'>(kutu {box}/5)</span>",
-                            unsafe_allow_html=True)
+    query = st.text_input("🔎 Defterimde ara", placeholder="İngilizce kelime veya Türkçe anlamı…").strip().casefold()
+    level_filter = st.selectbox("Seviye filtresi", LEVELS, key="notebook_level_filter")
+    notebook_words = [BY_EN[en] for en in learned if en in BY_EN]
+    if query:
+        notebook_words = [w for w in notebook_words if query in w["en"].casefold() or query in w["tr"].casefold() or query in w["example"].casefold()]
+    if level_filter != "Tümü":
+        notebook_words = [w for w in notebook_words if w["level"] == level_filter]
+
+    st.markdown(f"**Defter sayfası · {len(notebook_words)} kelime**")
+    if notebook_words:
+        for index, word in enumerate(notebook_words, start=1):
+            srs_card = st.session_state.srs.get(word["en"], {})
+            box_num = srs_card.get("box", 1)
+            card_html = f"""<div style="position:relative; margin:12px 0; padding:18px 18px 16px 56px;
+            border:1px solid #d6d9df; border-radius:5px; color:#202b45;
+            background-color:#fffdf5;
+            background-image:linear-gradient(to bottom, transparent 31px, #d9e4f2 32px);
+            background-size:100% 32px; box-shadow:2px 3px 0 rgba(30,40,60,.08);">
+            <div style="position:absolute; left:36px; top:0; bottom:0; border-left:2px solid #dc8d8d;"></div>
+            <div style="font-family:Georgia,serif; font-size:23px; line-height:32px; color:#1f3b67;"><b>{index}. {word['en']}</b></div>
+            <div style="line-height:32px; font-size:17px;"><b>Türkçe:</b> {word['tr']}</div>
+            <div style="line-height:32px; font-style:italic;">{word['example']}</div>
+            <div style="line-height:25px; color:#69758b; font-size:13px;">{word['level']} seviye · Tekrar kutusu {box_num}/5</div>
+            </div>"""
+            st.markdown(card_html, unsafe_allow_html=True)
+            col_a, col_b = st.columns([1, 1])
+            with col_a:
+                speak(word["en"], "🔊 Kelimeyi dinle", key=f"notebook_word_audio_{word['en']}")
+            with col_b:
+                speak(word["example"], "🔊 Örnek cümleyi dinle", key=f"notebook_example_audio_{word['en']}")
     else:
-        st.info("Henüz kelime yok. Kelimeler bölümünden ilkini ekle.")
+        st.info("Henüz burada gösterilecek kelime yok. Kelimeler bölümünden öğrendiğin kelimeleri defterine ekleyebilirsin.")
 
+    st.divider()
     st.subheader("Konuşma geçmişi")
     hist = st.session_state.speaking_history
     if hist:
