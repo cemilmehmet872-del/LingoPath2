@@ -1116,115 +1116,56 @@ elif page == "Oyunlar":
                     label_visibility="collapsed")
 
     if game == "☁️ Bulut Platformu":
-        st.subheader("☁️ Sonsuz Bulut Tırmanışı")
-        st.write("Yukarı doğru sonsuza kadar tırman! Doğru cevap bulutlarına basarak puan kazan, yıldızları topla ve en yüksek skorunu geçmeye çalış.")
-        st.caption("Bilgisayar: ← → hareket, ↑ veya Boşluk zıplama. Telefon: ekrandaki tuşlara dokun.")
+        st.subheader("☁️ Bulut Platformu: Gökyüzü Yolculuğu")
+        st.write("Ok tuşlarıyla veya ekrandaki tuşlarla ilerle. Doğru cevap bulutuna zıplayınca bulutlar platforma dönüşür. Yanlış cevapta düşersin. Yıldızları topla, hareketli engellerden kaç ve kontrol noktalarına ulaş!")
+        st.caption("Bilgisayar: ← → hareket, ↑ veya Boşluk zıplama. Telefon: alttaki tuşlara dokun. Oyunu başlatmak için oyun alanına bir kez tıkla.")
         platform_html = r"""
         <div id="lp-game" style="font-family:system-ui,sans-serif;color:#16324f;max-width:900px;margin:auto">
-          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:800;margin-bottom:8px">
-            <span id="score">🏆 Puan: 0</span><span id="height">⬆️ Yükseklik: 0 m</span><span id="stars">⭐ Yıldız: 0</span>
-          </div>
+          <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700;margin-bottom:8px"><span id="status">⭐ Puan: 0</span><span id="height">⬆️ Yükseklik: 0</span><span>← → hareket · ↑ zıpla</span></div>
           <canvas id="sky" width="850" height="500" style="width:100%;height:auto;border-radius:18px;border:2px solid #9bc8ed;display:block;background:#8bd3ff;touch-action:none"></canvas>
-          <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:12px 0">
-            <button id="left" type="button" aria-label="Sola git" style="font-size:24px;padding:12px 22px;border:0;border-radius:12px;background:#d8ecff;touch-action:none;user-select:none;-webkit-user-select:none">⬅️</button>
-            <button id="jump" type="button" aria-label="Zıpla" style="font-size:20px;padding:12px 24px;border:0;border-radius:12px;background:#ffe6a8;touch-action:none;user-select:none;-webkit-user-select:none">⬆️ Zıpla</button>
-            <button id="right" type="button" aria-label="Sağa git" style="font-size:24px;padding:12px 22px;border:0;border-radius:12px;background:#d8ecff;touch-action:none;user-select:none;-webkit-user-select:none">➡️</button>
-            <button id="restart" type="button" style="font-size:16px;padding:12px 14px;border:0;border-radius:12px;background:#e5e7eb;touch-action:manipulation">↻ Baştan başlat</button>
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0">
+            <button id="left" style="font-size:24px;padding:10px 22px;border:0;border-radius:12px;background:#d8ecff">⬅️</button><button id="jump" style="font-size:22px;padding:10px 24px;border:0;border-radius:12px;background:#ffe6a8">⬆️ Zıpla</button><button id="right" style="font-size:24px;padding:10px 22px;border:0;border-radius:12px;background:#d8ecff">➡️</button><button id="restart" style="font-size:16px;padding:10px 14px;border:0;border-radius:12px;background:#e5e7eb">↻ Baştan</button>
           </div>
-          <div id="message" style="font-weight:700;text-align:center;min-height:28px">Sonsuz tırmanış: bulutlara zıpla, yıldızları topla ve puanını yükselt!</div>
-          <div style="font-size:13px;text-align:center;color:#47647d">Bilgisayar: ← → hareket, ↑ / Boşluk zıplama · Telefon: tuşlara basılı tutarak hareket et</div>
+          <div id="message" style="font-weight:700;text-align:center;min-height:28px">Bulutların üstüne zıpla ve gökyüzüne tırman!</div>
         </div>
         <script>
-        (() => {
-          const c=document.getElementById('sky'), ctx=c.getContext('2d');
-          const scoreEl=document.getElementById('score'),heightEl=document.getElementById('height'),starsEl=document.getElementById('stars'),msg=document.getElementById('message');
-          const questions=[
-            {q:'“Apple” ne demek?',a:['Elma','Kitap','Kedi'],ok:0},
-            {q:'“Blue” hangi renktir?',a:['Kırmızı','Mavi','Yeşil'],ok:1},
-            {q:'“I am happy” ne demek?',a:['Üzgünüm','Yorgunum','Mutluyum'],ok:2},
-            {q:'“Cat” hangisidir?',a:['Kedi','Köpek','Kuş'],ok:0},
-            {q:'“Book” ne demek?',a:['Kalem','Kitap','Masa'],ok:1},
-            {q:'“Good morning” ne demek?',a:['Günaydın','İyi geceler','Hoşça kal'],ok:0},
-            {q:'“Dog” hangisidir?',a:['Kuş','Balık','Köpek'],ok:2},
-            {q:'“Thank you” ne demek?',a:['Lütfen','Teşekkür ederim','Affedersin'],ok:1}
+        (()=>{
+          const c=document.getElementById('sky'),ctx=c.getContext('2d'),status=document.getElementById('status'),heightEl=document.getElementById('height'),msg=document.getElementById('message');
+          const qs=[
+            {q:'“I am hungry.” cümlesinin anlamı nedir?',a:['Susadım.','Acıktım.','Üşüdüm.'],ok:1},
+            {q:'“She has a cat.” cümlesinin anlamı nedir?',a:['Onun bir kedisi var.','O bir köpek görüyor.','O okula gidiyor.'],ok:0},
+            {q:'“Good morning!” ne demektir?',a:['İyi geceler!','Hoşça kal!','Günaydın!'],ok:2},
+            {q:'“I like apples.” cümlesi ne demektir?',a:['Elmaları severim.','Elma istiyorum.','Elma satıyorum.'],ok:0},
+            {q:'“Where is my book?” ne demektir?',a:['Kitabım yeni mi?','Kitabım nerede?','Kitabımı al.'],ok:1},
+            {q:'“He is very happy.” ne demektir?',a:['O çok mutlu.','O çok yorgun.','O çok hızlı.'],ok:0},
+            {q:'“Thank you!” ne demektir?',a:['Özür dilerim!','Lütfen!','Teşekkür ederim!'],ok:2},
+            {q:'“Close the door, please.” ne demektir?',a:['Lütfen kapıyı kapat.','Lütfen pencereyi aç.','Buraya otur.'],ok:0}
           ];
-          let player,platforms,items,keys,cameraY,score,stars,bestHeight,frame,questionNo,gameOver,lastPlatformY,feedbackUntil,feedbackText;
+          let player,plats,keys,score,bestHeight,camY,rowsSinceQuiz,nextQ,over,frame;
           const rand=(a,b)=>a+Math.random()*(b-a);
-          function makePlatform(y, previousX=null){
-            const w=rand(105,135);
-            // Yakındaki platformlara göre konum seç: sonraki sıçrama ulaşılabilir kalsın.
-            let px;
-            if(previousX===null) px=rand(20,c.width-w-20);
-            else px=Math.max(12,Math.min(c.width-w-12,previousX+rand(-155,155)));
-            const p={x:px,y,w,h:18,quiz:false,active:true,correct:false,label:'',q:null,rowId:null,checked:false};
-            platforms.push(p);return p;
+          function addPlatform(y,prevX){const w=rand(105,145),x=Math.max(8,Math.min(850-w,prevX+rand(-145,145)));plats.push({x,y,w,h:18,type:'normal',active:true});return x;}
+          function addQuizRow(y,prevX){const q=qs[nextQ%qs.length];nextQ++;const correct=q.ok, opts=q.a.map((label,i)=>({label,correct:i===correct}));
+            // Üç cevap bulutu aynı yüksekliğe yakın; doğru cevap rastgele konumda.
+            const order=[0,1,2].sort(()=>Math.random()-.5); const base=Math.max(8,Math.min(480,prevX+rand(-80,80)));
+            const xs=[Math.max(8,Math.min(850-150,base-175)),Math.max(8,Math.min(850-150,base)),Math.max(8,Math.min(850-150,base+175))];
+            xs.forEach((x,i)=>plats.push({x,y:y+([0,1,2][i]===1?0:rand(-10,10)),w:150,h:18,type:'quiz',label:opts[order[i]].label,correct:opts[order[i]].correct,question:q.q,row:nextQ,active:true}));
           }
-          function addRow(y, previousX=null){
-            const quiz=(Math.floor(Math.abs(y)/410)%3===2);
-            if(quiz){
-              const q=questions[questionNo%questions.length], rowId=questionNo++;
-              const choices=q.a.map((label,i)=>({label,correct:i===q.ok}));
-              for(let i=choices.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[choices[i],choices[j]]=[choices[j],choices[i]];}
-              const w=205,gap=(c.width-3*w)/4;
-              choices.forEach((choice,i)=>platforms.push({x:gap+(w+gap)*i,y,w,h:22,quiz:true,active:true,correct:choice.correct,label:choice.label,q:q.q,rowId,checked:false,answered:false}));
-              return previousX;
+          function reset(){keys={};score=0;bestHeight=0;camY=0;rowsSinceQuiz=0;nextQ=0;over=false;frame=0;player={x:405,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:360,y:465,w:130,h:20,type:'normal',active:true}];let y=390,px=405;for(let i=0;i<13;i++,y-=82){px=addPlatform(y,px);}msg.textContent='Bulutların üstüne zıpla ve gökyüzüne tırman!';}
+          function jump(){if(player.ground&&!over){player.vy=-12.8;player.ground=false;}}
+          function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));}
+          hold('left','left');hold('right','right');hold('jump','up');document.getElementById('restart').onclick=reset;
+          window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump();}});
+          window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
+          function drawCloud(p,sy){const yy=p.y+sy;ctx.fillStyle=p.type==='quiz'?'#fff4b8':'#fff';ctx.beginPath();ctx.arc(p.x+28,yy+3,18,0,Math.PI*2);ctx.arc(p.x+65,yy-5,25,0,Math.PI*2);ctx.arc(p.x+105,yy+4,19,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23415c';ctx.textAlign='center';if(p.type==='quiz'){ctx.font='bold 12px system-ui';ctx.fillText(p.label,p.x+p.w/2,yy-23, p.w+8);}}
+          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active){p.active=false;if(p.correct){score+=100;msg.textContent='✅ Doğru cevap! +100 puan';plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=false;});}else{msg.textContent='❌ Bu cevap doğru değil. Doğru bulutu ararken dikkat et!';p.type='normal';p.active=false;}}}
+          function loop(){frame++;ctx.clearRect(0,0,850,500);const sky=ctx.createLinearGradient(0,0,0,500);sky.addColorStop(0,'#5ab8ff');sky.addColorStop(1,'#e7f8ff');ctx.fillStyle=sky;ctx.fillRect(0,0,850,500);ctx.fillStyle='rgba(255,255,255,.65)';[[90,70],[330,130],[700,80]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.arc(a+25,b-8,28,0,7);ctx.arc(a+54,b,20,0,7);ctx.fill();});
+            if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.48;player.y+=player.vy;player.ground=false;
+              if(player.vy>=0){for(const p of plats){if(p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
+              if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
+              const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-82;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;const q=qs[(nextQ-1)%qs.length];msg.textContent='🧠 '+q.q+' — doğru anlamın yazdığı buluta zıpla!';}else{addPlatform(y,px);}break;}
+              plats=plats.filter(p=>p.y<560);if(player.y>520){over=true;msg.textContent='💨 Düştün! Puan: '+score+' — Baştan düğmesine basıp tekrar dene.';}
             }
-            const p=makePlatform(y,previousX);
-            if(Math.random()<0.58) items.push({x:Math.max(20,Math.min(c.width-20,p.x+p.w/2+rand(-35,35))),y:y-38,taken:false});
-            return p.x+p.w/2;
-          }
-          function reset(){
-            player={x:c.width/2-14,y:405,w:28,h:36,vx:0,vy:0,ground:true};platforms=[];items=[];keys={left:false,right:false};cameraY=0;score=0;stars=0;bestHeight=0;frame=0;questionNo=0;gameOver=false;lastPlatformY=450;feedbackUntil=0;feedbackText='';
-            platforms.push({x:c.width/2-95,y:450,w:190,h:20,quiz:false,active:true,correct:false,label:'',checked:false});
-            let previousX=c.width/2;
-            for(let y=365;y>-1000;y-=82){previousX=addRow(y,previousX);lastPlatformY=y;}
-            msg.textContent='Tırmanmaya başla! Bulutlar artık daha yakın; doğru cevapları bul ve yıldızları topla.';
-          }
-          function jump(){if(player.ground&&!gameOver){player.vy=-12.8;player.ground=false;}}
-          function bindHold(id,key){
-            const b=document.getElementById(id);const release=()=>{keys[key]=false;};
-            b.addEventListener('pointerdown',e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId);}catch(_){}keys[key]=true;if(key==='up')jump();});
-            ['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,release));
-            window.addEventListener('pointerup',release);window.addEventListener('pointercancel',release);b.addEventListener('contextmenu',e=>e.preventDefault());
-          }
-          bindHold('left','left');bindHold('right','right');bindHold('jump','up');
-          document.getElementById('restart').addEventListener('click',e=>{e.preventDefault();reset();});
-          window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w','A','D','W'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=true;if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w'||e.key==='W')jump();}});
-          window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a'||e.key==='A')keys.left=false;if(e.key==='ArrowRight'||e.key==='d'||e.key==='D')keys.right=false;});
-          function drawCloud(p,sy){
-            if(!p.active)return;ctx.fillStyle=p.quiz?(p.answered?'#9be7c1':'#fff'):(p.correct?'#59d39a':'#fff');
-            ctx.beginPath();ctx.ellipse(p.x+p.w*.5,sy+8,p.w*.48,10,0,0,Math.PI*2);ctx.ellipse(p.x+p.w*.3,sy+3,p.w*.22,12,0,0,Math.PI*2);ctx.ellipse(p.x+p.w*.66,sy+1,p.w*.23,14,0,0,Math.PI*2);ctx.fill();
-            ctx.fillStyle='#173b5c';ctx.textAlign='center';ctx.font='bold 14px system-ui';
-            if(p.quiz){ctx.fillText(p.label,p.x+p.w/2,sy-14,p.w+10);}else{ctx.fillStyle='#287c67';ctx.fillRect(p.x,sy+12,p.w,6);}
-          }
-          function loop(){
-            frame++;ctx.clearRect(0,0,c.width,c.height);const sky=ctx.createLinearGradient(0,0,0,c.height);sky.addColorStop(0,'#4db7ff');sky.addColorStop(1,'#e8faff');ctx.fillStyle=sky;ctx.fillRect(0,0,c.width,c.height);
-            ctx.fillStyle='rgba(255,255,255,.65)';for(let i=0;i<7;i++){let bx=(i*157+(frame*.22))%(c.width+100)-40,by=(i*83+40-cameraY*.12)%c.height;ctx.beginPath();ctx.arc(bx,by,18,0,7);ctx.arc(bx+23,by-8,25,0,7);ctx.arc(bx+48,by,17,0,7);ctx.fill();}
-            if(!gameOver){
-              player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x+=player.vx;player.x=Math.max(0,Math.min(c.width-player.w,player.x));
-              const oldBottom=player.y+player.h;player.vy+=.48;player.y+=player.vy;player.ground=false;
-              if(player.vy>=0){for(const p of platforms){if(!p.active)continue;const horizontal=player.x+player.w>p.x&&player.x<p.x+p.w;const newBottom=player.y+player.h;
-                if(horizontal&&oldBottom<=p.y+7&&newBottom>=p.y&&newBottom<=p.y+26){player.y=p.y-player.h;player.vy=0;player.ground=true;
-                  if(p.quiz&&!p.answered){const row=platforms.filter(other=>other.quiz&&other.rowId===p.rowId);row.forEach(other=>other.answered=true);
-                    if(p.correct){score+=100;row.forEach(other=>{other.quiz=false;other.correct=true;other.label='';other.active=true;});feedbackText='✅ Doğru cevap! +100 puan';}
-                    else{score=Math.max(0,score-20);p.active=false;player.ground=false;player.vy=-3;feedbackText='❌ Yanlış cevap! -20 puan, bir daha dene.';}
-                    feedbackUntil=frame+100;msg.textContent=feedbackText;
-                  }break;
-                }
-              }}
-              if(player.y-cameraY<190)cameraY=player.y-190;
-              const height=Math.max(0,Math.floor((450-player.y)/10));if(height>bestHeight){score+=Math.max(0,height-bestHeight);bestHeight=height;}
-              // Yeni platformlar kamera yukarı ilerledikçe sürekli ve küçük aralıklarla üretilir.
-              while(lastPlatformY>cameraY-750){lastPlatformY-=82;let prev=platforms.filter(p=>!p.quiz&&p.active&&p.y>lastPlatformY).sort((a,b)=>a.y-b.y)[0];addRow(lastPlatformY,prev?prev.x+prev.w/2:c.width/2);}
-              platforms=platforms.filter(p=>p.y-cameraY<c.height+90);
-              items.forEach(it=>{if(it.taken)return;const sy=it.y-cameraY;ctx.font='25px sans-serif';ctx.fillStyle='#ffbf00';ctx.fillText('★',it.x,sy);if(Math.abs(player.x+player.w/2-it.x)<22&&Math.abs(player.y+player.h/2-it.y)<27){it.taken=true;stars++;score+=50;feedbackText='⭐ Yıldız topladın! +50 puan';feedbackUntil=frame+80;msg.textContent=feedbackText;}});
-              items=items.filter(it=>it.y-cameraY<c.height+80&&!it.taken);
-              if(player.y-cameraY>c.height+70){gameOver=true;msg.textContent='💨 Düştün! Puanın: '+score+' · Tekrar oynamak için Baştan başlat tuşuna bas.';}
-              if(frame>feedbackUntil){const near=platforms.find(p=>p.quiz&&!p.answered&&p.y-cameraY>-40&&p.y-cameraY<c.height*.78);if(near)msg.textContent=near.q+' — doğru cevabın yazdığı buluta bas!';else if(!gameOver)msg.textContent='Sonsuz tırmanış! Bulutlara zıpla ve yıldızları topla.';}
-            }
-            platforms.forEach(p=>drawCloud(p,p.y-cameraY));
-            const py=player.y-cameraY;ctx.fillStyle='#ff8c42';ctx.fillRect(player.x,py,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,py+8,6,7);ctx.fillRect(player.x+17,py+8,6,7);ctx.fillStyle='#19324d';ctx.fillRect(player.x+7,py+10,3,4);ctx.fillRect(player.x+19,py+10,3,4);ctx.fillStyle='#b85d32';ctx.fillRect(player.x+8,py+25,13,3);
-            scoreEl.textContent='🏆 Puan: '+score;heightEl.textContent='⬆️ Yükseklik: '+bestHeight+' m';starsEl.textContent='⭐ Yıldız: '+stars;requestAnimationFrame(loop);
+            plats.forEach(p=>drawCloud(p,0));ctx.fillStyle='#ff8c42';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+8,5,6);ctx.fillRect(player.x+17,player.y+8,5,6);ctx.fillStyle='#19324d';ctx.fillRect(player.x+6,player.y+10,2,3);ctx.fillRect(player.x+18,player.y+10,2,3);status.textContent='⭐ Puan: '+score;heightEl.textContent='⬆️ Yükseklik: '+Math.floor(camY/10);requestAnimationFrame(loop);
           }
           reset();loop();
         })();
