@@ -1118,84 +1118,101 @@ elif page == "Oyunlar":
     if game == "☁️ Bulut Platformu":
         st.subheader("☁️ Bulut Platformu: Gökyüzü Yolculuğu")
         st.write("Normal bulutlardan zıplayarak ilerle. Ara sıra İngilizce bir cümle eksik bırakılır; cümleyi doğru şekilde tamamlayan İngilizce cevabın yazdığı buluta bas. Sorular önceki hâline göre biraz daha zor!")
-        st.caption("Bilgisayar: ← → hareket, ↑ veya Boşluk zıplama. Telefon/tablet: büyük yön tuşlarını basılı tut, Zıpla'ya dokun. Zıplama mesafesi ayarlandı; soru bulutlarının üstünden atlayıp geçemezsin.")
+        st.caption("Bilgisayar: ← → hareket, ↑ veya Boşluk zıplama. Telefon: alttaki tuşlara dokun. Oyunu başlatmak için oyun alanına bir kez tıkla.")
         platform_html = r"""
         <div id="lp-game" style="font-family:system-ui,sans-serif;color:#16324f;max-width:900px;margin:auto">
           <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700;margin-bottom:8px"><span id="status">⭐ Puan: 0</span><span id="height">⬆️ Yükseklik: 0</span><span>← → hareket · ↑ zıpla</span></div>
-          <div id="question" style="display:none;box-sizing:border-box;background:#fff8d8;color:#17324d;border:2px solid #e6b84c;border-radius:14px;padding:12px 14px;margin:0 0 8px;text-align:center;font-size:clamp(15px,2.4vw,20px);font-weight:800"></div>
-          <canvas id="sky" width="850" height="500" style="width:100%;height:auto;border-radius:18px;border:2px solid #9bc8ed;display:block;background:#8bd3ff;touch-action:none"></canvas>
-          <div id="mobile-controls" style="display:grid;grid-template-columns:1fr 1.35fr 1fr;gap:10px;margin:12px 0;touch-action:manipulation">
-            <button id="left" aria-label="Sola git" style="min-height:64px;font-size:30px;font-weight:800;padding:12px 8px;border:2px solid #8db9e5;border-radius:16px;background:#d8ecff;color:#17324d;touch-action:none;user-select:none">⬅️</button><button id="jump" aria-label="Zıpla" style="min-height:64px;font-size:22px;font-weight:800;padding:12px 8px;border:2px solid #e0b64e;border-radius:16px;background:#ffe6a8;color:#533c00;touch-action:none;user-select:none">⬆️ Zıpla</button><button id="right" aria-label="Sağa git" style="min-height:64px;font-size:30px;font-weight:800;padding:12px 8px;border:2px solid #8db9e5;border-radius:16px;background:#d8ecff;color:#17324d;touch-action:none;user-select:none">➡️</button>
+          <canvas id="sky" width="850" height="460" style="width:100%;height:auto;border-radius:18px;border:2px solid #9bc8ed;display:block;background:#8bd3ff;touch-action:none"></canvas>
+          <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0">
+            <button id="left" style="font-size:28px;padding:14px 28px;border:0;border-radius:12px;background:#d8ecff">⬅️</button><button id="jump" style="font-size:24px;padding:14px 28px;border:0;border-radius:12px;background:#ffe6a8">⬆️ Zıpla</button><button id="right" style="font-size:28px;padding:14px 28px;border:0;border-radius:12px;background:#d8ecff">➡️</button><button id="restart" style="font-size:16px;padding:10px 14px;border:0;border-radius:12px;background:#e5e7eb">↻ Baştan</button>
           </div>
-          <div style="display:flex;justify-content:center;margin:0 0 10px"><button id="restart" style="min-height:46px;font-size:17px;font-weight:700;padding:10px 20px;border:0;border-radius:12px;background:#e5e7eb;color:#222">↻ Baştan başlat</button></div>
           <div id="message" style="font-weight:700;text-align:center;min-height:28px">Bulutların üstüne zıpla ve gökyüzüne tırman!</div>
         </div>
         <script>
         (()=>{
-          const c=document.getElementById('sky'),ctx=c.getContext('2d'),status=document.getElementById('status'),heightEl=document.getElementById('height'),msg=document.getElementById('message'),questionEl=document.getElementById('question');
-          // Cümleyi İngilizce devam ettirme: seçeneklerin üçü de İngilizce ve tek cevap dilbilgisel olarak doğru.
-          const qs=[
-            {q:'Complete: “Yesterday, I ___ to the park.”',a:['go','went','going'],ok:1},
-            {q:'Complete: “She is tired because she ___ all day.”',a:['worked','work','working'],ok:0},
-            {q:'Complete: “If it rains, we ___ at home.”',a:['stayed','will stay','staying'],ok:1},
-            {q:'Complete: “Tom has lived here ___ 2020.”',a:['for','since','during'],ok:1},
-            {q:'Complete: “I was watching TV when the phone ___.”',a:['rings','ring','rang'],ok:2},
-            {q:'Complete: “There isn’t ___ milk in the fridge.”',a:['many','much','few'],ok:1},
-            {q:'Complete: “She ___ her homework before dinner yesterday.”',a:['finished','finish','finishes'],ok:0},
-            {q:'Complete: “You ___ wear a seat belt in a car.”',a:['should to','should','are'],ok:1},
-            {q:'Complete: “I have never ___ sushi before.”',a:['eat','ate','eaten'],ok:2},
-            {q:'Complete: “This book is ___ than the last one.”',a:['interesting','more interesting','most interesting'],ok:1},
-            {q:'Complete: “They were late ___ the bus didn’t arrive.”',a:['because','but','although'],ok:0},
-            {q:'Complete: “While we ___, it started to snow.”',a:['walk','were walking','walked'],ok:1}
+          const c=document.getElementById('sky'),ctx=c.getContext('2d'),status=document.getElementById('status'),heightEl=document.getElementById('height'),msg=document.getElementById('message');
+          // Soru havuzu karıştırılır; 50 soru bitmeden tekrar etmez.
+          const questionPool=[
+            {q:'Complete: “I ___ to school every day.”',a:['go','goes','going'],ok:0},
+            {q:'Complete: “Yesterday, we ___ a movie.”',a:['watch','watched','watching'],ok:1},
+            {q:'Complete: “She ___ my best friend.”',a:['am','are','is'],ok:2},
+            {q:'Complete: “They ___ playing outside now.”',a:['is','are','am'],ok:1},
+            {q:'Complete: “I have ___ apple.”',a:['a','an','the'],ok:1},
+            {q:'Complete: “He ___ breakfast at seven.”',a:['have','has','having'],ok:1},
+            {q:'Complete: “There ___ two cats in the garden.”',a:['is','are','am'],ok:1},
+            {q:'Complete: “My birthday is ___ May.”',a:['on','at','in'],ok:2},
+            {q:'Complete: “The opposite of hot is ___.”',a:['cold','warm','fast'],ok:0},
+            {q:'Complete: “A bird ___ fly.”',a:['can','cans','is'],ok:0},
+            {q:'Complete: “She doesn’t ___ coffee.”',a:['likes','like','liking'],ok:1},
+            {q:'Complete: “How ___ brothers have you got?”',a:['much','many','old'],ok:1},
+            {q:'Complete: “I am taller ___ my brother.”',a:['then','than','that'],ok:1},
+            {q:'Complete: “We ___ dinner yesterday.”',a:['had','have','has'],ok:0},
+            {q:'Complete: “Please ___ the door.”',a:['open','opens','opening'],ok:0},
+            {q:'Complete: “He is good ___ football.”',a:['in','at','on'],ok:1},
+            {q:'Complete: “I ___ my homework yet.”',a:['haven’t finished','didn’t finished','not finish'],ok:0},
+            {q:'Complete: “The children ___ in the park yesterday.”',a:['play','played','plays'],ok:1},
+            {q:'Complete: “There isn’t ___ water left.”',a:['many','much','few'],ok:1},
+            {q:'Complete: “This is ___ than that one.”',a:['bigger','biggest','big'],ok:0},
+            {q:'Complete: “If it rains, I ___ at home.”',a:['stay','will stay','stayed'],ok:1},
+            {q:'Complete: “She has lived here ___ 2021.”',a:['since','for','from'],ok:0},
+            {q:'Complete: “I was sleeping when he ___.”',a:['arrives','arrived','arrive'],ok:1},
+            {q:'Complete: “You ___ wear a helmet on a bike.”',a:['should','should to','are'],ok:0},
+            {q:'Complete: “They ___ never been to London.”',a:['have','has','are'],ok:0},
+            {q:'Complete: “How ___ is this T-shirt?”',a:['many','much','long'],ok:1},
+            {q:'Complete: “My sister ___ speak French.”',a:['don’t','doesn’t','isn’t'],ok:1},
+            {q:'Complete: “We go to school ___ bus.”',a:['by','on','with'],ok:0},
+            {q:'Complete: “The dog is ___ the table.”',a:['under','between','during'],ok:0},
+            {q:'Complete: “I ___ TV at the moment.”',a:['watch','watched','am watching'],ok:2},
+            {q:'Complete: “Last summer, they ___ to Spain.”',a:['go','went','gone'],ok:1},
+            {q:'Complete: “Have you ever ___ sushi?”',a:['eat','ate','eaten'],ok:2},
+            {q:'Complete: “This is the ___ day of my life.”',a:['happy','happier','happiest'],ok:2},
+            {q:'Complete: “I enjoy ___ books.”',a:['read','reading','to reading'],ok:1},
+            {q:'Complete: “She arrived ___ the station early.”',a:['at','in','on'],ok:0},
+            {q:'Complete: “There are ___ oranges in the bowl.”',a:['a little','a few','much'],ok:1},
+            {q:'Complete: “He ___ to music every evening.”',a:['listen','listens','listening'],ok:1},
+            {q:'Complete: “We ___ go now; it is late.”',a:['has','should','does'],ok:1},
+            {q:'Complete: “The film was ___ than I expected.”',a:['good','better','best'],ok:1},
+            {q:'Complete: “I have known her ___ five years.”',a:['since','for','at'],ok:1},
+            {q:'Complete: “When I got home, Mum ___ dinner.”',a:['cooked','was cooking','cook'],ok:1},
+            {q:'Complete: “Could you ___ me, please?”',a:['help','helps','helping'],ok:0},
+            {q:'Complete: “There ___ any cheese in the fridge.”',a:['aren’t','isn’t','don’t'],ok:1},
+            {q:'Complete: “He is the ___ runner in class.”',a:['faster','fastest','fast'],ok:1},
+            {q:'Complete: “I’m interested ___ science.”',a:['on','at','in'],ok:2},
+            {q:'Complete: “They ___ dinner before we arrived.”',a:['had eaten','have eat','eating'],ok:0},
+            {q:'Complete: “If I had time, I ___ help you.”',a:['will','would','am'],ok:1},
+            {q:'Complete: “Please be quiet. The baby ___.”',a:['sleeps','is sleeping','sleep'],ok:1},
+            {q:'Complete: “She asked me ___ I was okay.”',a:['if','what','which'],ok:0},
+            {q:'Complete: “I’m looking forward to ___ you.”',a:['see','seeing','saw'],ok:1}
           ];
-          let player,plats,keys,score,bestHeight,camY,rowsSinceQuiz,nextQ,over,frame,activeQuestionRow;
+          let qs=[],questionIndex=0,activeQuizRow=null;
+          function shuffleQuestions(){qs=questionPool.slice();for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}questionIndex=0;}
+          let player,plats,keys,score,bestHeight,camY,rowsSinceQuiz,over,frame;
           const rand=(a,b)=>a+Math.random()*(b-a);
-          function addPlatform(y,prevX){const w=rand(105,145),x=Math.max(8,Math.min(850-w,prevX+rand(-145,145)));plats.push({x,y,w,h:18,type:'normal',active:true});return x;}
-          function addQuizRow(y,prevX){const q=qs[nextQ%qs.length];nextQ++;const correct=q.ok, opts=q.a.map((label,i)=>({label,correct:i===correct}));
-            // Üç cevap bulutu aynı yüksekliğe yakın; doğru cevap rastgele konumda.
-            const order=[0,1,2].sort(()=>Math.random()-.5); const base=Math.max(8,Math.min(480,prevX+rand(-80,80)));
-            const xs=[Math.max(8,Math.min(850-150,base-175)),Math.max(8,Math.min(850-150,base)),Math.max(8,Math.min(850-150,base+175))];
-            // Bulutlar önce kenarlara yakın doğar, oyuncu yaklaşınca hedef konumlarına kayar.
-            const targets=[115,350,585];
-            xs.forEach((x,i)=>plats.push({x,targetX:targets[i],y:y+([0,1,2][i]===1?0:rand(-10,10)),w:150,h:18,type:'quiz',label:opts[order[i]].label,correct:opts[order[i]].correct,question:q.q,row:nextQ,active:true}));
+          function addPlatform(y,prevX){const w=120,x=Math.max(12,Math.min(850-w,prevX+rand(-65,65)));plats.push({x,y,w,h:18,type:'normal',active:true});return x;}
+          function addQuizRow(y,prevX){
+            if(questionIndex>=qs.length)shuffleQuestions();
+            const q=qs[questionIndex++],opts=q.a.map((label,i)=>({label,correct:i===q.ok}));
+            const order=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+            // Cevap bulutları karakterin yakınında doğar; rastgele uzak bir kenara düşmez.
+            const center=Math.max(190,Math.min(660,player.x+player.w/2+rand(-25,25))),xs=[center-145,center,center+145],row=questionIndex;
+            activeQuizRow={row,question:q.q};
+            xs.forEach((x,i)=>plats.push({x:Math.max(8,Math.min(850-125,x)),y:y+rand(-3,3),w:125,h:18,type:'quiz',label:opts[order[i]].label,correct:opts[order[i]].correct,question:q.q,row,active:true}));
           }
-          function reset(){keys={};score=0;bestHeight=0;camY=0;rowsSinceQuiz=0;nextQ=0;activeQuestionRow=null;questionEl.style.display='none';questionEl.textContent='';over=false;frame=0;player={x:405,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:360,y:465,w:130,h:20,type:'normal',active:true}];let y=390,px=405;for(let i=0;i<13;i++,y-=88){px=addPlatform(y,px);}msg.textContent='Bulutların üstüne zıpla ve gökyüzüne tırman!';}
-          function jump(){if(player.ground&&!over){player.vy=-11.4;player.ground=false;}}
-          function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();if(b.setPointerCapture){try{b.setPointerCapture(e.pointerId)}catch(_){}}});}
-          hold('left','left');hold('right','right');hold('jump','up');document.getElementById('restart').addEventListener('click',reset);
-          // Dokunmatik kontroller: parmak düğmeden ayrılsa da tuş takılı kalmasın.
-          ['left','right','jump'].forEach(id=>{const b=document.getElementById(id);b.addEventListener('contextmenu',e=>e.preventDefault());});
-          const releaseControls=()=>{keys.left=false;keys.right=false;keys.up=false;};
-          ['pointerup','pointercancel','touchend','touchcancel'].forEach(ev=>window.addEventListener(ev,releaseControls,{passive:true}));
-          window.addEventListener('blur',releaseControls);
+          function reset(){keys={};score=0;bestHeight=0;camY=0;rowsSinceQuiz=0;activeQuizRow=null;over=false;frame=0;shuffleQuestions();player={x:397,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:345,y:455,w:160,h:20,type:'normal',active:true}];let y=385,px=405;for(let i=0;i<5;i++,y-=78){px=addPlatform(y,px);}msg.textContent='Karakter ortada başladı! Bulutlara zıpla ve altın bulutlarda doğru cevabı bul.';}
+          function jump(){if(player.ground&&!over){player.vy=-11.8;player.ground=false;}}
+          function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));}
+          hold('left','left');hold('right','right');hold('jump','up');document.getElementById('restart').onclick=reset;
           window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump();}});
           window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
           function drawCloud(p,sy){const yy=p.y+sy;ctx.fillStyle=p.type==='quiz'?'#fff4b8':'#fff';ctx.beginPath();ctx.arc(p.x+28,yy+3,18,0,Math.PI*2);ctx.arc(p.x+65,yy-5,25,0,Math.PI*2);ctx.arc(p.x+105,yy+4,19,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23415c';ctx.textAlign='center';if(p.type==='quiz'){ctx.font='bold 12px system-ui';ctx.fillText(p.label,p.x+p.w/2,yy-23, p.w+8);}}
-          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active&&p.row===activeQuestionRow){if(p.correct){p.active=false;score+=150;msg.textContent='✅ Correct! +150 points';questionEl.style.display='none';activeQuestionRow=null;plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});}else{p.active=false;player.ground=false;player.vy=-7.5;msg.textContent='❌ Yanlış cevap! İlerlemek için doğru cevap bulutuna basmalısın. Tekrar dene!';}}}
+          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active){if(p.correct){score+=150;msg.textContent='✅ Doğru cevap! +150 puan';plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});activeQuizRow=null;}else{msg.textContent='❌ Yanlış cevap! Doğru cevabı bulmak için diğer altın bulutları dene.';}}}
           function loop(){frame++;ctx.clearRect(0,0,850,500);const sky=ctx.createLinearGradient(0,0,0,500);sky.addColorStop(0,'#5ab8ff');sky.addColorStop(1,'#e7f8ff');ctx.fillStyle=sky;ctx.fillRect(0,0,850,500);ctx.fillStyle='rgba(255,255,255,.65)';[[90,70],[330,130],[700,80]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.arc(a+25,b-8,28,0,7);ctx.arc(a+54,b,20,0,7);ctx.fill();});
-            if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.62;player.y+=player.vy;player.ground=false;
-              if(player.vy>=0){for(const p of plats){
-                const rowCloud=activeQuestionRow!==null?plats.find(v=>v.type==='quiz'&&v.row===activeQuestionRow):null;
-                // Soru açıkken alttaki güvenli platformlara basılabilir; quiz sırasının üstündeki platformlara geçilemez.
-                const belowQuizRow=!!rowCloud&&p.type!=='quiz'&&p.y>rowCloud.y+8;
-                const allowedByGate=activeQuestionRow===null||belowQuizRow||(p.type==='quiz'&&p.row===activeQuestionRow);
-                if(allowedByGate&&p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}
-              }}
-              // Soru bulutları yaklaşırken yavaşça merkeze doğru kayar.
-              if(activeQuestionRow!==null){
-                const rowCloud=plats.find(p=>p.type==='quiz'&&p.row===activeQuestionRow);
-                if(rowCloud){
-                  const distance=Math.abs((player.y+player.h/2)-(rowCloud.y));
-                  if(distance<300){plats.filter(p=>p.type==='quiz'&&p.row===activeQuestionRow).forEach(p=>{p.x+=(p.targetX-p.x)*0.035;});}
-                }
-              }
-              // Soru aktifken oyuncu cevap bulutlarının üstünden zıplayıp geçemesin.
-              if(activeQuestionRow!==null&&player.vy<0){const rowCloud=plats.find(p=>p.type==='quiz'&&p.row===activeQuestionRow);if(rowCloud&&player.y<rowCloud.y-player.h-8){player.y=rowCloud.y-player.h-8;player.vy=0;}}
+            if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.48;player.y+=player.vy;player.ground=false;
+              if(player.vy>=0){for(const p of plats){if(p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
               if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
-              const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-88;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;}else{addPlatform(y,px);}break;}
-              plats=plats.filter(p=>p.y<560);
-              if(activeQuestionRow===null){const visibleQuiz=plats.find(p=>p.type==='quiz'&&p.active&&p.y>75&&p.y<420);if(visibleQuiz){activeQuestionRow=visibleQuiz.row;questionEl.textContent='🧠 '+visibleQuiz.question+'  —  Doğru cevabın yazdığı buluta zıpla!';questionEl.style.display='block';msg.textContent='Cümleyi oku ve üç İngilizce cevap bulutundan doğru olana zıpla.';}}
-              if(player.y>520){over=true;msg.textContent='💨 Düştün! Puan: '+score+' — Baştan düğmesine basıp tekrar dene.';}
+              if(!activeQuizRow){const top=Math.min(...plats.map(p=>p.y));if(top>-105){const y=top-78;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:player.x+player.w/2;rowsSinceQuiz++;if(rowsSinceQuiz>=6){addQuizRow(y,px);rowsSinceQuiz=0;}else{addPlatform(y,px);}}}
+              if(activeQuizRow){const rowPlatforms=plats.filter(p=>p.type==='quiz'&&p.row===activeQuizRow.row);if(rowPlatforms.length&&rowPlatforms[0].y>45&&rowPlatforms[0].y<390){msg.textContent='🧠 '+activeQuizRow.question+' — doğru cevabın yazdığı altın buluta bas!';}}
+              plats=plats.filter(p=>p.y<560);if(player.y>520){over=true;msg.textContent='💨 Düştün! Puan: '+score+' — Baştan düğmesine basıp tekrar dene.';}
             }
             plats.forEach(p=>drawCloud(p,0));ctx.fillStyle='#ff8c42';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+8,5,6);ctx.fillRect(player.x+17,player.y+8,5,6);ctx.fillStyle='#19324d';ctx.fillRect(player.x+6,player.y+10,2,3);ctx.fillRect(player.x+18,player.y+10,2,3);status.textContent='⭐ Puan: '+score;heightEl.textContent='⬆️ Yükseklik: '+Math.floor(camY/10);requestAnimationFrame(loop);
           }
@@ -1203,7 +1220,7 @@ elif page == "Oyunlar":
         })();
         </script>
         """
-        components.html(platform_html, height=820, scrolling=False)
+        components.html(platform_html, height=700, scrolling=False)
 
     elif game == "⚡ Kelime Avcısı":
         st.subheader("⚡ Kelime Avcısı")
