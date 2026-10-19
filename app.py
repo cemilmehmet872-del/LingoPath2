@@ -1126,10 +1126,10 @@ elif page == "Oyunlar":
           </div>
           <canvas id="sky" width="850" height="500" style="width:100%;height:auto;border-radius:18px;border:2px solid #9bc8ed;display:block;background:#8bd3ff;touch-action:none"></canvas>
           <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin:12px 0">
-            <button id="left" style="font-size:24px;padding:10px 22px;border:0;border-radius:12px;background:#d8ecff">⬅️</button>
-            <button id="jump" style="font-size:20px;padding:10px 24px;border:0;border-radius:12px;background:#ffe6a8">⬆️ Zıpla</button>
-            <button id="right" style="font-size:24px;padding:10px 22px;border:0;border-radius:12px;background:#d8ecff">➡️</button>
-            <button id="restart" style="font-size:16px;padding:10px 14px;border:0;border-radius:12px;background:#e5e7eb">↻ Baştan</button>
+            <button id="left" type="button" aria-label="Sola git" style="font-size:24px;padding:12px 22px;border:0;border-radius:12px;background:#d8ecff;touch-action:none;user-select:none;-webkit-user-select:none">⬅️</button>
+            <button id="jump" type="button" aria-label="Zıpla" style="font-size:20px;padding:12px 24px;border:0;border-radius:12px;background:#ffe6a8;touch-action:none;user-select:none;-webkit-user-select:none">⬆️ Zıpla</button>
+            <button id="right" type="button" aria-label="Sağa git" style="font-size:24px;padding:12px 22px;border:0;border-radius:12px;background:#d8ecff;touch-action:none;user-select:none;-webkit-user-select:none">➡️</button>
+            <button id="restart" type="button" style="font-size:16px;padding:12px 14px;border:0;border-radius:12px;background:#e5e7eb;touch-action:manipulation">↻ Baştan başlat</button>
           </div>
           <div id="message" style="font-weight:700;text-align:center;min-height:28px">Sonsuz gökyüzü tırmanışı! Doğru cevap bulutlarına bas, yıldızları topla ve olabildiğince yüksel.</div>
           <div style="font-size:13px;text-align:center;color:#47647d">Bilgisayar: ← → hareket, ↑ / Boşluk zıplama · Telefon: ekrandaki tuşlar</div>
@@ -1184,8 +1184,22 @@ elif page == "Oyunlar":
             msg.textContent='Tırmanmaya başla! Doğru cevap bulutlarına bas, yıldızları topla.';
           }
           function jump(){if(player.ground&&!gameOver){player.vy=-12.5;player.ground=false;}}
-          function bindHold(id,key){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[key]=true;if(key==='up')jump();});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[key]=false));}
-          bindHold('left','left');bindHold('right','right');bindHold('jump','up');document.getElementById('restart').onclick=reset;
+          function bindHold(id,key){
+            const b=document.getElementById(id);
+            const release=()=>{keys[key]=false;};
+            b.addEventListener('pointerdown',e=>{
+              e.preventDefault();
+              try{b.setPointerCapture(e.pointerId);}catch(_){ }
+              keys[key]=true;
+              if(key==='up')jump();
+            });
+            ['pointerup','pointerleave','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,release));
+            window.addEventListener('pointerup',release);
+            window.addEventListener('pointercancel',release);
+            b.addEventListener('contextmenu',e=>e.preventDefault());
+          }
+          bindHold('left','left');bindHold('right','right');bindHold('jump','up');
+          document.getElementById('restart').addEventListener('click',e=>{e.preventDefault();reset();});
           window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump();}});
           window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
           function drawCloud(p,sy){
