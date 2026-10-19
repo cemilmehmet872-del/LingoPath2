@@ -1155,7 +1155,9 @@ elif page == "Oyunlar":
             // Üç cevap bulutu aynı yüksekliğe yakın; doğru cevap rastgele konumda.
             const order=[0,1,2].sort(()=>Math.random()-.5); const base=Math.max(8,Math.min(480,prevX+rand(-80,80)));
             const xs=[Math.max(8,Math.min(850-150,base-175)),Math.max(8,Math.min(850-150,base)),Math.max(8,Math.min(850-150,base+175))];
-            xs.forEach((x,i)=>plats.push({x,y:y+([0,1,2][i]===1?0:rand(-10,10)),w:150,h:18,type:'quiz',label:opts[order[i]].label,correct:opts[order[i]].correct,question:q.q,row:nextQ,active:true}));
+            // Bulutlar önce kenarlara yakın doğar, oyuncu yaklaşınca hedef konumlarına kayar.
+            const targets=[115,350,585];
+            xs.forEach((x,i)=>plats.push({x,targetX:targets[i],y:y+([0,1,2][i]===1?0:rand(-10,10)),w:150,h:18,type:'quiz',label:opts[order[i]].label,correct:opts[order[i]].correct,question:q.q,row:nextQ,active:true}));
           }
           function reset(){keys={};score=0;bestHeight=0;camY=0;rowsSinceQuiz=0;nextQ=0;activeQuestionRow=null;questionEl.style.display='none';questionEl.textContent='';over=false;frame=0;player={x:405,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:360,y:465,w:130,h:20,type:'normal',active:true}];let y=390,px=405;for(let i=0;i<13;i++,y-=88){px=addPlatform(y,px);}msg.textContent='Bulutların üstüne zıpla ve gökyüzüne tırman!';}
           function jump(){if(player.ground&&!over){player.vy=-11.4;player.ground=false;}}
@@ -1172,8 +1174,22 @@ elif page == "Oyunlar":
           function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active&&p.row===activeQuestionRow){if(p.correct){p.active=false;score+=150;msg.textContent='✅ Correct! +150 points';questionEl.style.display='none';activeQuestionRow=null;plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});}else{p.active=false;player.ground=false;player.vy=-7.5;msg.textContent='❌ Yanlış cevap! İlerlemek için doğru cevap bulutuna basmalısın. Tekrar dene!';}}}
           function loop(){frame++;ctx.clearRect(0,0,850,500);const sky=ctx.createLinearGradient(0,0,0,500);sky.addColorStop(0,'#5ab8ff');sky.addColorStop(1,'#e7f8ff');ctx.fillStyle=sky;ctx.fillRect(0,0,850,500);ctx.fillStyle='rgba(255,255,255,.65)';[[90,70],[330,130],[700,80]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.arc(a+25,b-8,28,0,7);ctx.arc(a+54,b,20,0,7);ctx.fill();});
             if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.62;player.y+=player.vy;player.ground=false;
-              if(player.vy>=0){for(const p of plats){const quizGateActive=activeQuestionRow!==null;const allowedByGate=!quizGateActive||(p.type==='quiz'&&p.row===activeQuestionRow);if(allowedByGate&&p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
-              // Soru aktifken oyuncu cevap bulutlarının üstünden uçarak geçemesin.
+              if(player.vy>=0){for(const p of plats){
+                const rowCloud=activeQuestionRow!==null?plats.find(v=>v.type==='quiz'&&v.row===activeQuestionRow):null;
+                // Soru açıkken alttaki güvenli platformlara basılabilir; quiz sırasının üstündeki platformlara geçilemez.
+                const belowQuizRow=!!rowCloud&&p.type!=='quiz'&&p.y>rowCloud.y+8;
+                const allowedByGate=activeQuestionRow===null||belowQuizRow||(p.type==='quiz'&&p.row===activeQuestionRow);
+                if(allowedByGate&&p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}
+              }}
+              // Soru bulutları yaklaşırken yavaşça merkeze doğru kayar.
+              if(activeQuestionRow!==null){
+                const rowCloud=plats.find(p=>p.type==='quiz'&&p.row===activeQuestionRow);
+                if(rowCloud){
+                  const distance=Math.abs((player.y+player.h/2)-(rowCloud.y));
+                  if(distance<300){plats.filter(p=>p.type==='quiz'&&p.row===activeQuestionRow).forEach(p=>{p.x+=(p.targetX-p.x)*0.035;});}
+                }
+              }
+              // Soru aktifken oyuncu cevap bulutlarının üstünden zıplayıp geçemesin.
               if(activeQuestionRow!==null&&player.vy<0){const rowCloud=plats.find(p=>p.type==='quiz'&&p.row===activeQuestionRow);if(rowCloud&&player.y<rowCloud.y-player.h-8){player.y=rowCloud.y-player.h-8;player.vy=0;}}
               if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
               const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-88;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;}else{addPlatform(y,px);}break;}
