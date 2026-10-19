@@ -1117,7 +1117,7 @@ elif page == "Oyunlar":
 
     if game == "☁️ Bulut Platformu":
         st.subheader("☁️ Bulut Platformu: Gökyüzü Yolculuğu")
-        st.write("Ok tuşlarıyla veya ekrandaki tuşlarla ilerle. Doğru cevap bulutuna zıplayınca bulutlar platforma dönüşür. Yanlış cevapta düşersin. Yıldızları topla, hareketli engellerden kaç ve kontrol noktalarına ulaş!")
+        st.write("Normal bulutlardan zıplayarak ilerle. Ara sıra İngilizce bir cümle eksik bırakılır; cümleyi doğru şekilde tamamlayan İngilizce cevabın yazdığı buluta bas. Sorular önceki hâline göre biraz daha zor!")
         st.caption("Bilgisayar: ← → hareket, ↑ veya Boşluk zıplama. Telefon: alttaki tuşlara dokun. Oyunu başlatmak için oyun alanına bir kez tıkla.")
         platform_html = r"""
         <div id="lp-game" style="font-family:system-ui,sans-serif;color:#16324f;max-width:900px;margin:auto">
@@ -1131,15 +1131,20 @@ elif page == "Oyunlar":
         <script>
         (()=>{
           const c=document.getElementById('sky'),ctx=c.getContext('2d'),status=document.getElementById('status'),heightEl=document.getElementById('height'),msg=document.getElementById('message');
+          // Cümleyi İngilizce devam ettirme: seçeneklerin üçü de İngilizce ve tek cevap dilbilgisel olarak doğru.
           const qs=[
-            {q:'“I am hungry.” cümlesinin anlamı nedir?',a:['Susadım.','Acıktım.','Üşüdüm.'],ok:1},
-            {q:'“She has a cat.” cümlesinin anlamı nedir?',a:['Onun bir kedisi var.','O bir köpek görüyor.','O okula gidiyor.'],ok:0},
-            {q:'“Good morning!” ne demektir?',a:['İyi geceler!','Hoşça kal!','Günaydın!'],ok:2},
-            {q:'“I like apples.” cümlesi ne demektir?',a:['Elmaları severim.','Elma istiyorum.','Elma satıyorum.'],ok:0},
-            {q:'“Where is my book?” ne demektir?',a:['Kitabım yeni mi?','Kitabım nerede?','Kitabımı al.'],ok:1},
-            {q:'“He is very happy.” ne demektir?',a:['O çok mutlu.','O çok yorgun.','O çok hızlı.'],ok:0},
-            {q:'“Thank you!” ne demektir?',a:['Özür dilerim!','Lütfen!','Teşekkür ederim!'],ok:2},
-            {q:'“Close the door, please.” ne demektir?',a:['Lütfen kapıyı kapat.','Lütfen pencereyi aç.','Buraya otur.'],ok:0}
+            {q:'Complete: “Yesterday, I ___ to the park.”',a:['go','went','going'],ok:1},
+            {q:'Complete: “She is tired because she ___ all day.”',a:['worked','work','working'],ok:0},
+            {q:'Complete: “If it rains, we ___ at home.”',a:['stayed','will stay','staying'],ok:1},
+            {q:'Complete: “Tom has lived here ___ 2020.”',a:['for','since','during'],ok:1},
+            {q:'Complete: “I was watching TV when the phone ___.”',a:['rings','ring','rang'],ok:2},
+            {q:'Complete: “There isn’t ___ milk in the fridge.”',a:['many','much','few'],ok:1},
+            {q:'Complete: “She ___ her homework before dinner yesterday.”',a:['finished','finish','finishes'],ok:0},
+            {q:'Complete: “You ___ wear a seat belt in a car.”',a:['should to','should','are'],ok:1},
+            {q:'Complete: “I have never ___ sushi before.”',a:['eat','ate','eaten'],ok:2},
+            {q:'Complete: “This book is ___ than the last one.”',a:['interesting','more interesting','most interesting'],ok:1},
+            {q:'Complete: “They were late ___ the bus didn’t arrive.”',a:['because','but','although'],ok:0},
+            {q:'Complete: “While we ___, it started to snow.”',a:['walk','were walking','walked'],ok:1}
           ];
           let player,plats,keys,score,bestHeight,camY,rowsSinceQuiz,nextQ,over,frame;
           const rand=(a,b)=>a+Math.random()*(b-a);
@@ -1157,12 +1162,12 @@ elif page == "Oyunlar":
           window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump();}});
           window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
           function drawCloud(p,sy){const yy=p.y+sy;ctx.fillStyle=p.type==='quiz'?'#fff4b8':'#fff';ctx.beginPath();ctx.arc(p.x+28,yy+3,18,0,Math.PI*2);ctx.arc(p.x+65,yy-5,25,0,Math.PI*2);ctx.arc(p.x+105,yy+4,19,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23415c';ctx.textAlign='center';if(p.type==='quiz'){ctx.font='bold 12px system-ui';ctx.fillText(p.label,p.x+p.w/2,yy-23, p.w+8);}}
-          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active){p.active=false;if(p.correct){score+=100;msg.textContent='✅ Doğru cevap! +100 puan';plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=false;});}else{msg.textContent='❌ Bu cevap doğru değil. Doğru bulutu ararken dikkat et!';p.type='normal';p.active=false;}}}
+          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active){p.active=false;if(p.correct){score+=150;msg.textContent='✅ Correct! +150 points';plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});}else{msg.textContent='❌ Not quite! Try to land on another answer cloud.';p.active=false;}}}
           function loop(){frame++;ctx.clearRect(0,0,850,500);const sky=ctx.createLinearGradient(0,0,0,500);sky.addColorStop(0,'#5ab8ff');sky.addColorStop(1,'#e7f8ff');ctx.fillStyle=sky;ctx.fillRect(0,0,850,500);ctx.fillStyle='rgba(255,255,255,.65)';[[90,70],[330,130],[700,80]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.arc(a+25,b-8,28,0,7);ctx.arc(a+54,b,20,0,7);ctx.fill();});
             if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.48;player.y+=player.vy;player.ground=false;
               if(player.vy>=0){for(const p of plats){if(p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
               if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
-              const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-82;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;const q=qs[(nextQ-1)%qs.length];msg.textContent='🧠 '+q.q+' — doğru anlamın yazdığı buluta zıpla!';}else{addPlatform(y,px);}break;}
+              const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-82;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;const q=qs[(nextQ-1)%qs.length];msg.textContent='🧠 '+q.q+' — jump onto the correct English answer!';}else{addPlatform(y,px);}break;}
               plats=plats.filter(p=>p.y<560);if(player.y>520){over=true;msg.textContent='💨 Düştün! Puan: '+score+' — Baştan düğmesine basıp tekrar dene.';}
             }
             plats.forEach(p=>drawCloud(p,0));ctx.fillStyle='#ff8c42';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+8,5,6);ctx.fillRect(player.x+17,player.y+8,5,6);ctx.fillStyle='#19324d';ctx.fillRect(player.x+6,player.y+10,2,3);ctx.fillRect(player.x+18,player.y+10,2,3);status.textContent='⭐ Puan: '+score;heightEl.textContent='⬆️ Yükseklik: '+Math.floor(camY/10);requestAnimationFrame(loop);
