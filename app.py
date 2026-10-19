@@ -1159,17 +1159,20 @@ elif page == "Oyunlar":
           }
           function reset(){keys={};score=0;bestHeight=0;camY=0;rowsSinceQuiz=0;nextQ=0;activeQuestionRow=null;questionEl.style.display='none';questionEl.textContent='';over=false;frame=0;player={x:405,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:360,y:465,w:130,h:20,type:'normal',active:true}];let y=390,px=405;for(let i=0;i<13;i++,y-=102){px=addPlatform(y,px);}msg.textContent='Bulutların üstüne zıpla ve gökyüzüne tırman!';}
           function jump(){if(player.ground&&!over){player.vy=-15.2;player.ground=false;}}
-          function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));}
+          function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();if(b.setPointerCapture){try{b.setPointerCapture(e.pointerId)}catch(_){}}});}
           hold('left','left');hold('right','right');hold('jump','up');document.getElementById('restart').addEventListener('click',reset);
-          // Mobilde parmak tuştan biraz kayınca hareket takılı kalmasın; ekran kaydırmasını da engelle.
-          ['left','right','jump'].forEach(id=>{const b=document.getElementById(id);b.addEventListener('contextmenu',e=>e.preventDefault());b.addEventListener('pointerdown',e=>{e.preventDefault();if(b.setPointerCapture){try{b.setPointerCapture(e.pointerId)}catch(_){}}});});
+          // Dokunmatik kontroller: parmak düğmeden ayrılsa da tuş takılı kalmasın.
+          ['left','right','jump'].forEach(id=>{const b=document.getElementById(id);b.addEventListener('contextmenu',e=>e.preventDefault());});
+          const releaseControls=()=>{keys.left=false;keys.right=false;keys.up=false;};
+          ['pointerup','pointercancel','touchend','touchcancel'].forEach(ev=>window.addEventListener(ev,releaseControls,{passive:true}));
+          window.addEventListener('blur',releaseControls);
           window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','a','d','w'].includes(e.key)){e.preventDefault();if(e.key==='ArrowLeft'||e.key==='a')keys.left=true;if(e.key==='ArrowRight'||e.key==='d')keys.right=true;if(e.key==='ArrowUp'||e.key===' '||e.key==='w')jump();}});
           window.addEventListener('keyup',e=>{if(e.key==='ArrowLeft'||e.key==='a')keys.left=false;if(e.key==='ArrowRight'||e.key==='d')keys.right=false;});
           function drawCloud(p,sy){const yy=p.y+sy;ctx.fillStyle=p.type==='quiz'?'#fff4b8':'#fff';ctx.beginPath();ctx.arc(p.x+28,yy+3,18,0,Math.PI*2);ctx.arc(p.x+65,yy-5,25,0,Math.PI*2);ctx.arc(p.x+105,yy+4,19,0,Math.PI*2);ctx.fill();ctx.fillStyle='#23415c';ctx.textAlign='center';if(p.type==='quiz'){ctx.font='bold 12px system-ui';ctx.fillText(p.label,p.x+p.w/2,yy-23, p.w+8);}}
-          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active){p.active=false;if(p.correct){score+=150;msg.textContent='✅ Correct! +150 points';questionEl.style.display='none';activeQuestionRow=null;plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});}else{msg.textContent='❌ Not quite! The question stays above—try another answer cloud.';}}}
+          function land(p){player.y=p.y-player.h;player.vy=0;player.ground=true;if(p.type==='quiz'&&p.active&&p.row===activeQuestionRow){if(p.correct){p.active=false;score+=150;msg.textContent='✅ Correct! +150 points';questionEl.style.display='none';activeQuestionRow=null;plats.filter(v=>v.type==='quiz'&&v.row===p.row).forEach(v=>{v.type='normal';v.active=true;v.label='';});}else{p.active=false;player.ground=false;player.vy=-7.5;msg.textContent='❌ Yanlış cevap! İlerlemek için doğru cevap bulutuna basmalısın. Tekrar dene!';}}}
           function loop(){frame++;ctx.clearRect(0,0,850,500);const sky=ctx.createLinearGradient(0,0,0,500);sky.addColorStop(0,'#5ab8ff');sky.addColorStop(1,'#e7f8ff');ctx.fillStyle=sky;ctx.fillRect(0,0,850,500);ctx.fillStyle='rgba(255,255,255,.65)';[[90,70],[330,130],[700,80]].forEach(([a,b])=>{ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.arc(a+25,b-8,28,0,7);ctx.arc(a+54,b,20,0,7);ctx.fill();});
             if(!over){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.52;player.y+=player.vy;player.ground=false;
-              if(player.vy>=0){for(const p of plats){if(p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
+              if(player.vy>=0){for(const p of plats){const quizGateActive=activeQuestionRow!==null;const allowedByGate=!quizGateActive||(p.type==='quiz'&&p.row===activeQuestionRow);if(allowedByGate&&p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
               if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
               const top=Math.min(...plats.map(p=>p.y));while(top>-160){const y=Math.min(...plats.map(p=>p.y))-102;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:rand(250,600);rowsSinceQuiz++;if(rowsSinceQuiz>=9){addQuizRow(y,px);rowsSinceQuiz=0;}else{addPlatform(y,px);}break;}
               plats=plats.filter(p=>p.y<560);
@@ -1182,7 +1185,7 @@ elif page == "Oyunlar":
         })();
         </script>
         """
-        components.html(platform_html, height=570, scrolling=False)
+        components.html(platform_html, height=820, scrolling=False)
 
     elif game == "⚡ Kelime Avcısı":
         st.subheader("⚡ Kelime Avcısı")
