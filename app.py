@@ -1204,7 +1204,7 @@ elif page == "Oyunlar":
           ];
           let qs=[],questionIndex=0,activeQuizRow=null;
           function shuffleQuestions(){qs=questionPool.slice();for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}questionIndex=0;}
-          let player,plats,keys,score,bestHeight,camY,nextQuizScore,over,frame;
+          let player,plats,keys,score,bestHeight,camY,nextQuizHeight,over,frame;
           const rand=(a,b)=>a+Math.random()*(b-a);
           function addPlatform(y,prevCenter){const w=120;const x=Math.max(12,Math.min(850-w,prevCenter-w/2+rand(-65,65)));plats.push({x,y,w,h:18,type:'normal',active:true});return x+w/2;}
           function addQuizRow(){
@@ -1213,7 +1213,7 @@ elif page == "Oyunlar":
             activeQuizRow={question:q.q,answers:q.a,correct:q.ok};
             questionText.textContent=q.q;
             answerOptions.innerHTML='';
-            quizFeedback.textContent='Her 250 puanda bir soru çıkar. Doğru cevap +150 puan, yanlış cevap -100 puan!';
+            quizFeedback.textContent='Her 250 yükseklikte bir soru çıkar. Doğru cevap +150 puan, yanlış cevap -100 puan!';
             q.a.forEach((answer,index)=>{
               const button=document.createElement('button');
               button.type='button';
@@ -1243,7 +1243,7 @@ elif page == "Oyunlar":
               setTimeout(()=>{quizPanel.style.display='none';quizFeedback.style.color='';},1100);
             }
           }
-          function reset(){keys={};score=0;bestHeight=0;camY=0;nextQuizScore=250;activeQuizRow=null;quizPanel.style.display='none';quizFeedback.textContent='';over=false;frame=0;shuffleQuestions();player={x:397,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:345,y:455,w:160,h:20,type:'normal',active:true}];let y=385,px=405;for(let i=0;i<5;i++,y-=78){px=addPlatform(y,px);}msg.textContent='Karakter ortada başladı! Bulutlara zıpla. Her 250 puanda bir A/B/C sorusu çıkar.';}
+          function reset(){keys={};score=0;bestHeight=0;camY=0;nextQuizHeight=250;activeQuizRow=null;quizPanel.style.display='none';quizFeedback.textContent='';over=false;frame=0;shuffleQuestions();player={x:397,y:420,w:26,h:34,vx:0,vy:0,ground:false};plats=[{x:345,y:455,w:160,h:20,type:'normal',active:true}];let y=385,px=405;for(let i=0;i<5;i++,y-=78){px=addPlatform(y,px);}msg.textContent='Karakter ortada başladı! Bulutlara zıpla. Her 250 yükseklikte bir A/B/C sorusu çıkar.';}
           function jump(){if(player.ground&&!over){player.vy=-11.8;player.ground=false;}}
           function hold(id,k){const b=document.getElementById(id);b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;if(k==='up')jump();});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));}
           hold('left','left');hold('right','right');hold('jump','up');document.getElementById('restart').onclick=reset;
@@ -1255,7 +1255,7 @@ elif page == "Oyunlar":
             if(!over&&!activeQuizRow){player.vx=(keys.left?-4.2:0)+(keys.right?4.2:0);player.x=Math.max(0,Math.min(824,player.x+player.vx));const oldBottom=player.y+player.h;player.vy+=.48;player.y+=player.vy;player.ground=false;
               if(player.vy>=0){for(const p of plats){if(p.active&&player.x+player.w>p.x&&player.x<p.x+p.w&&oldBottom<=p.y+4&&player.y+player.h>=p.y){land(p);break;}}}
               if(player.y<210){const shift=210-player.y;player.y=210;plats.forEach(p=>p.y+=shift);camY+=shift;bestHeight=Math.max(bestHeight,Math.floor(camY));score+=Math.floor(shift*.15);}
-              if(!activeQuizRow){const top=Math.min(...plats.map(p=>p.y));if(top>-105){const y=top-78;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:player.x+player.w/2;addPlatform(y,px);}if(score>=nextQuizScore){nextQuizScore+=250;addQuizRow();}}
+              if(!activeQuizRow){const top=Math.min(...plats.map(p=>p.y));if(top>-105){const y=top-78;const below=plats.filter(p=>p.y>y&&p.type!=='quiz').sort((a,b)=>a.y-b.y)[0];let px=below?below.x+below.w/2:player.x+player.w/2;addPlatform(y,px);}if(Math.floor(camY/10)>=nextQuizHeight){nextQuizHeight+=250;addQuizRow();}}
               plats=plats.filter(p=>p.y<560);if(player.y>480){over=true;msg.textContent='💨 Düştün! Puan: '+score+' — Baştan düğmesine basıp tekrar dene.';}
             }
             plats.forEach(p=>drawCloud(p,0));ctx.fillStyle='#ff8c42';ctx.fillRect(player.x,player.y,player.w,player.h);ctx.fillStyle='#fff';ctx.fillRect(player.x+5,player.y+8,5,6);ctx.fillRect(player.x+17,player.y+8,5,6);ctx.fillStyle='#19324d';ctx.fillRect(player.x+6,player.y+10,2,3);ctx.fillRect(player.x+18,player.y+10,2,3);status.textContent='⭐ Puan: '+score;heightEl.textContent='⬆️ Yükseklik: '+Math.floor(camY/10);requestAnimationFrame(loop);
